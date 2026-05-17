@@ -1,7 +1,15 @@
 'use client'
 // @ts-nocheck
 
-import { useState } from "react";
+import { useState } from "react"
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useWriteContract, useAccount, WagmiProvider } from 'wagmi'
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { wagmiConfig } from '../../lib/arc'
+import '@rainbow-me/rainbowkit/styles.css'
+
+const queryClient = new QueryClient()
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -51,6 +59,30 @@ const DELIVERABLE_TYPES = [
   { id:"url",   label:"URL",         placeholder:"https://docs.google.com/…",hint:"Direct link to the deliverable. Use a public, shareable URL." },
   { id:"hash",  label:"Content hash",placeholder:"Paste text — its hash is stored",hint:"Hash of raw text. Suitable for short deliverables."  },
 ];
+
+// ─── ARC CONTRACTS ────────────────────────────────────────────────────────────
+
+const IDENTITY_REGISTRY_ADDRESS = '0x8004A818BFB912233c491871b3d84c89A494BD9e'
+
+const IDENTITY_REGISTRY_ABI = [
+  {
+    type: 'function',
+    name: 'register',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'metadataURI', type: 'string' }],
+    outputs: [{ name: 'tokenId', type: 'uint256' }],
+  },
+  {
+    type: 'event',
+    name: 'Transfer',
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'from', type: 'address' },
+      { indexed: true, name: 'to', type: 'address' },
+      { indexed: true, name: 'tokenId', type: 'uint256' },
+    ],
+  },
+] as const
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -627,10 +659,90 @@ function SubmitDeliverableModal({ job, myAgent, onClose, onSubmit }) {
 function AgentRegistration({ onRegistered }) {
   const [step,setStep]=useState(1);const [regStep,setRegStep]=useState("idle");const [agent,setAgent]=useState(null);
   const [form,setForm]=useState({name:"",description:"",type:"",version:"1.0.0",capabilities:[],imageUrl:""});
+  const { writeContractAsync } = useWriteContract()
+  const { address, isConnected } = useAccount()
   const upd=(k,v)=>setForm(f=>({...f,[k]:v}));
   const toggleCap=(cap)=>setForm(f=>({...f,capabilities:f.capabilities.includes(cap)?f.capabilities.filter(c=>c!==cap):[...f.capabilities,cap]}));
   const meta=JSON.stringify({name:form.name||"My Agent",description:form.description,agent_type:form.type,capabilities:form.capabilities,version:form.version||"1.0.0",platform:"CONACT"},null,2);
-  const reg=async()=>{setRegStep("registering");await sleep(2400);const a={id:fakeId(),name:form.name,address:fakeAddr(),capabilities:form.capabilities,type:form.type,score:0,completed:0,earned:0,txHash:fakeTx()};setAgent(a);setRegStep("done");onRegistered(a);};
+  const reg = async () => {
+  if (!isConnected) {
+    alert('Please connect your wallet first')
+    return
+  }
+  // Switch to Arc testnet if needed
+  if (window.ethereum) {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x4CE332' }],
+    })
+  } catch (switchError) {
+    // Try the other chain ID format
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x4cef52' }],
+      })
+    } catch (err) {
+      console.log('Could not switch network:', err)
+    }
+  }
+}
+  setRegStep("registering")
+
+  try {
+    const metadata = {
+      name: form.name,
+      description: form.description,
+      agent_type: form.type,
+      capabilities: form.capabilities,
+      version: form.version || '1.0.0',
+      platform: 'CONACT',
+    }
+
+    const metadataUri = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`
+
+    const txHash = await writeContractAsync({
+      address: IDENTITY_REGISTRY_ADDRESS,
+      abi: IDENTITY_REGISTRY_ABI,
+      functionName: 'register',
+      args: [metadataUri],
+    })
+
+    const registered = {
+      id: fakeId(),
+      name: form.name,
+      address: address || fakeAddr(),
+      capabilities: form.capabilities,
+      type: form.type,
+      score: 0,
+      completed: 0,
+      earned: 0,
+      txHash: txHash,
+    }
+
+    setAgent(registered)
+    setRegStep("done")
+    onRegistered(registered)
+
+  } catch (err) {
+  console.error('Registration failed:', err)
+  setRegStep("idle")
+  
+  const error = err as any
+  const errorMessage = error?.message || error?.details || error?.shortMessage || 'Unknown error'
+  
+  if (errorMessage.includes('rejected') || errorMessage.includes('denied')) {
+    alert('const error = err as anyTransaction cancelled.')
+  } else if (errorMessage.includes('insufficient') || errorMessage.includes('funds')) {
+    alert('Insufficient funds. Get free testnet USDC at faucet.testnet.arc.network')
+  } else if (errorMessage.includes('network') || errorMessage.includes('chain')) {
+    alert('Wrong network. Please switch to Arc Testnet.')
+  } else {
+    alert(`Transaction failed: ${errorMessage}`)
+  }
+}
+}
   if(regStep==="done"&&agent)return(<div style={{padding:"26px 30px",maxWidth:500}} className="fade-in">
     <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:16}}><div style={{width:24,height:24,borderRadius:"50%",background:"#061a10",border:"1px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",color:"#22c55e",fontSize:11}}>✓</div><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#22c55e"}}>Agent registered on Arc</h1></div>
     <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:13,padding:16,marginBottom:12}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:34,height:34,borderRadius:8,background:cb(agent.capabilities[0]||"Writing"),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:12,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.address)}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"#4a4d66",marginBottom:1}}>AGENT ID</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#6b7fff"}}>#{agent.id}</div></div></div>
@@ -719,6 +831,8 @@ export function Marketplace() {
   const [deliverableMap,setDeliverableMap]= useState({});    // jobId → { value, dtype, delivHash, txHash }
   const [feedbackMap,  setFeedbackMap]  = useState({});
   const [feedbackHistory,setFeedbackHistory]= useState([]);
+  const { writeContractAsync } = useWriteContract()
+  const { address, isConnected } = useAccount()
 
   const activeJobs   = myAgent ? [FUNDED_JOB] : [];
   const allJobs      = [...JOBS, FUNDED_JOB];
@@ -767,7 +881,7 @@ export function Marketplace() {
         <div style={{display:"flex",gap:18,alignItems:"center"}}>
           <div style={{textAlign:"right"}}><div style={{fontSize:10,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginBottom:1,letterSpacing:.5}}>ESCROW</div><div style={{fontSize:13,fontWeight:500,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace"}}>{escrowTotal.toLocaleString()} USDC</div></div>
           <div style={{width:1,height:24,background:"#14162a"}}/>
-          <div style={{display:"flex",alignItems:"center",gap:7,background:"#0d0f1a",border:"1px solid #1e2238",borderRadius:8,padding:"6px 11px"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#22c55e"}}/><span style={{fontSize:12,fontFamily:"'JetBrains Mono',monospace",color:"#8085a8"}}>0x742d…f44e</span></div>
+          <ConnectButton />
         </div>
       </header>
 
@@ -865,4 +979,19 @@ export function Marketplace() {
       </div>
     </div>
   );
+}
+export function MarketplaceApp() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider theme={darkTheme({
+          accentColor: '#6b7fff',
+          accentColorForeground: 'white',
+          borderRadius: 'medium',
+        })}>
+          <Marketplace />
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
 }
