@@ -140,6 +140,7 @@ const DELIVERABLE_TYPES = [
 const IDENTITY_REGISTRY_ADDRESS = '0x8004A818BFB912233c491871b3d84c89A494BD9e'
 
 const IDENTITY_REGISTRY_ABI = [
+  
   {
     type: 'function',
     name: 'register',
@@ -156,6 +157,27 @@ const IDENTITY_REGISTRY_ABI = [
       { indexed: true, name: 'to', type: 'address' },
       { indexed: true, name: 'tokenId', type: 'uint256' },
     ],
+  },
+] as const
+
+const REPUTATION_REGISTRY_ADDRESS = '0x8004B663056A597Dffe9eCcC1965A193B7388713'
+
+const REPUTATION_REGISTRY_ABI = [
+  {
+    type: 'function',
+    name: 'giveFeedback',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'agentId', type: 'uint256' },
+      { name: 'score', type: 'int128' },
+      { name: 'feedbackType', type: 'uint8' },
+      { name: 'tag', type: 'string' },
+      { name: 'field1', type: 'string' },
+      { name: 'field2', type: 'string' },
+      { name: 'field3', type: 'string' },
+      { name: 'feedbackHash', type: 'bytes32' },
+    ],
+    outputs: [],
   },
 ] as const
 
@@ -736,8 +758,41 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
 
 function FeedbackModal({ job, onClose, onSubmit }) {
   const [score,setScore]=useState(85);const [tag,setTag]=useState("job_completed");const [notes,setNotes]=useState("");const [step,setStep]=useState("idle");const [txHash,setTxHash]=useState("");
+  const { writeContractAsync: feedbackContractAsync } = useWriteContract()
   const fh=displayHash(tag);const tl=FEEDBACK_TAGS.find(t=>t.value===tag)?.label||tag;const agentId=job.provider?.agentId||0;
-  const handleSubmit=async()=>{setStep("submitting");await sleep(2200);const tx=fakeTx();setTxHash(tx);setStep("done");onSubmit({score,tag,notes,txHash:tx,agentId,jobId:job.id});};
+  const handleSubmit=async()=>{setStep("submitting");const { keccak256, toHex, createWalletClient, custom, http } = await import('viem')
+const { arcTestnet } = await import('../../lib/arc')
+
+const feedbackHash = keccak256(toHex(tag)) as `0x${string}`
+
+const walletClient = createWalletClient({
+  chain: arcTestnet,
+  transport: custom(window.ethereum),
+})
+
+const [account] = await walletClient.getAddresses()
+
+const tx = await walletClient.writeContract({
+  address: REPUTATION_REGISTRY_ADDRESS as `0x${string}`,
+  abi: REPUTATION_REGISTRY_ABI,
+  functionName: 'giveFeedback',
+  args: [
+    BigInt(agentId),
+    BigInt(score),
+    0,
+    tag,
+    notes || '',
+    '',
+    '',
+    feedbackHash,
+  ],
+  account,
+})
+
+setTxHash(tx)
+setStep("done")
+onSubmit({ score, tag, notes, txHash: tx, agentId, jobId: job.id })
+};
   if(step==="done")return(<div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:420,maxWidth:"94vw"}}>
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:25,height:25,borderRadius:"50%",background:"#061a10",border:"1px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",color:"#22c55e",fontSize:12}}>✓</div><div style={{fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:700,color:"#22c55e"}}>Feedback recorded on Arc</div></div>
     <div style={{display:"flex",alignItems:"center",gap:11,background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"11px 13px",marginBottom:12}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:26,color:scoreColor(score),lineHeight:1}}>{score}</div><div><div style={{fontSize:13,color:"#e6e8f0",fontWeight:500}}>{job.provider?.name}</div><div style={{fontSize:11,color:"#5c5f7a",marginTop:1}}>{tl}</div></div></div>
