@@ -39,6 +39,17 @@ const AGENTIC_COMMERCE_ABI = [
     outputs: [],
   },
   {
+  type: 'function',
+  name: 'submit',
+  stateMutability: 'nonpayable',
+  inputs: [
+    { name: 'jobId', type: 'uint256' },
+    { name: 'deliverable', type: 'bytes32' },
+    { name: 'optParams', type: 'bytes' },
+  ],
+  outputs: [],
+  },
+  {
     type: 'event',
     name: 'JobCreated',
     anonymous: false,
@@ -69,7 +80,7 @@ const JOBS = [
 ];
 
 const FUNDED_JOB = {
-  id:9, title:"Weekly Crypto Newsletter Issue #14", category:"Writing", budget:220,
+  id:25960, title:"Weekly Crypto Newsletter Issue #14", category:"Writing", budget:220,
   deadline:"18h remaining", status:"funded", poster:"0x9a1b2c3d4e5f6789", posted:"2h ago",
   escrowedUsdc:220, evaluator:"AI validator",
   description:"1,500-word weekly newsletter covering DeFi, L2 scaling, and regulatory developments. Analytical tone, accessible to non-technical readers.",
@@ -318,7 +329,7 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
   const handleComplete = async () => {
     setStep("submitting");
     // Production (evaluator's wallet):
-    //   await writeContract({
+    //   await writeContractAsync({
     //     address: '0x0747EEf0706327138c69792bF28Cd525089e4583',
     //     abi: AGENTIC_COMMERCE_ABI,
     //     functionName: 'complete',
@@ -426,7 +437,7 @@ function RejectJobModal({ job, onClose, onRejected }) {
   const handleReject = async () => {
     setStep("submitting");
     // Production:
-    //   await writeContract({
+    //   await writeContractAsync({
     //     address: '0x0747EEf0706327138c69792bF28Cd525089e4583',
     //     abi: AGENTIC_COMMERCE_ABI,
     //     functionName: 'reject',
@@ -687,8 +698,63 @@ function FeedbackModal({ job, onClose, onSubmit }) {
 
 function SubmitDeliverableModal({ job, myAgent, onClose, onSubmit }) {
   const [dtype,setDtype]=useState("ipfs");const [value,setValue]=useState("");const [step,setStep]=useState("idle");const [result,setResult]=useState(null);
+  const { writeContractAsync } = useWriteContract()
   const dtypeInfo=DELIVERABLE_TYPES.find(d=>d.id===dtype);const delivHash=displayHash(value);const ready=value.trim().length>0;
-  const handleSubmit=async()=>{setStep("submitting");await sleep(2600);const tx=fakeTx();setResult({txHash:tx,delivHash,value,dtype});setStep("done");onSubmit({jobId:job.id,delivHash,txHash:tx,value,dtype});};
+  const handleSubmit = async () => {
+  setStep("submitting")
+
+  try {
+    if (window.ethereum) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x4CE332' }],
+        })
+      } catch (switchError) {
+        // Try the other chain ID MetaMask already has
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x4cef52' }],
+          })
+        } catch (secondError) {
+          console.log('Could not switch network:', secondError)
+        }
+      }
+    }
+
+    // Hash the deliverable reference
+    const { keccak256, toHex, createPublicClient, http } = await import('viem')
+    const { arcTestnet } = await import('../../lib/arc')
+    
+    const deliverableHash = keccak256(toHex(value)) as `0x${string}`
+
+    // Call submit() on AgenticCommerce
+    const txHash = await writeContractAsync({
+      address: AGENTIC_COMMERCE_ADDRESS,
+      abi: AGENTIC_COMMERCE_ABI,
+      functionName: 'submit',
+      args: [BigInt(job.id), deliverableHash, '0x'],
+    })
+
+    setResult({ txHash, delivHash: deliverableHash, value, dtype })
+    setStep("done")
+    onSubmit({ jobId: job.id, delivHash: deliverableHash, txHash, value, dtype })
+
+  } catch (err) {
+    const error = err as any
+    const errorMessage = error?.message || error?.shortMessage || 'Unknown error'
+    setStep("idle")
+
+    if (errorMessage.includes('rejected') || errorMessage.includes('denied')) {
+      alert('Transaction cancelled.')
+    } else if (errorMessage.includes('insufficient') || errorMessage.includes('funds')) {
+      alert('Insufficient funds. Get free testnet USDC at faucet.testnet.arc.network')
+    } else {
+      alert(`Transaction failed: ${errorMessage}`)
+    }
+  }
+}
   if(step==="done"&&result)return(<div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}><div style={{width:25,height:25,borderRadius:"50%",background:"#041c2a",border:"1px solid #38bdf8",display:"flex",alignItems:"center",justifyContent:"center",color:"#38bdf8",fontSize:12}}>✓</div><div style={{fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:700,color:"#38bdf8"}}>Deliverable submitted</div></div>
     <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:10,padding:"12px 13px",marginBottom:13}}><div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:5}}>DELIVERABLE STORED ON-CHAIN</div><div style={{fontSize:12,color:"#7090b0",marginBottom:6,wordBreak:"break-all"}}>{result.value}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#38bdf8",wordBreak:"break-all",lineHeight:1.6}}>{result.delivHash}</div></div>
@@ -732,25 +798,13 @@ function AgentRegistration({ onRegistered }) {
       params: [{ chainId: '0x4CE332' }],
     })
   } catch (switchError) {
-    if ((switchError as any).code === 4902) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: '0x4CE332',
-            chainName: 'Arc Testnet',
-            rpcUrls: ['https://rpc.testnet.arc.network'],
-            nativeCurrency: { 
-              name: 'USDC', 
-              symbol: 'USDC', 
-              decimals: 18 
-            },
-            blockExplorerUrls: ['https://testnet.arcscan.app'],
-          }]
-        })
-      } catch (addError) {
-        console.log('Could not add network:', addError)
-      }
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x4cef52' }],
+      })
+    } catch (secondError) {
+      console.log('Could not switch network:', secondError)
     }
   }
 }
@@ -758,18 +812,11 @@ function AgentRegistration({ onRegistered }) {
   setRegStep("registering")
 
   try {
-    const metadata = {
-      name: form.name,
-      description: form.description,
-      agent_type: form.type,
-      capabilities: form.capabilities,
-      version: form.version || '1.0.0',
-      platform: 'CONACT',
-    }
+// Use a short IPFS-style URI for testnet
+// In production upload metadata to Pinata first
+const metadataUri = `ipfs://conact-testnet-${form.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`
 
-    const metadataUri = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`
-
-    const txHash = await writeContract({
+    const txHash = await writeContractAsync({
       address: IDENTITY_REGISTRY_ADDRESS,
       abi: IDENTITY_REGISTRY_ABI,
       functionName: 'register',
@@ -958,25 +1005,13 @@ export function Marketplace() {
           params: [{ chainId: '0x4CE332' }],
         })
       } catch (switchError) {
-        if ((switchError as any).code === 4902) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: '0x4CE332',
-                chainName: 'Arc Testnet',
-                rpcUrls: ['https://rpc.testnet.arc.network'],
-                nativeCurrency: {
-                  name: 'USDC',
-                  symbol: 'USDC',
-                  decimals: 18
-                },
-                blockExplorerUrls: ['https://testnet.arcscan.app'],
-              }]
-            })
-          } catch (addError) {
-            console.log('Could not add network:', addError)
-          }
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x4cef52' }],
+          })
+        } catch (secondError) {
+          console.log('Could not switch network:', secondError)
         }
       }
     }
@@ -987,7 +1022,7 @@ export function Marketplace() {
 
     // Step 1: createJob
     alert('Step 1 of 3: Creating job on Arc...')
-    const createHash = await writeContract({
+    const createHash = await writeContractAsync({
       address: AGENTIC_COMMERCE_ADDRESS,
       abi: AGENTIC_COMMERCE_ABI,
       functionName: 'createJob',
@@ -1036,7 +1071,7 @@ export function Marketplace() {
 
     // Step 2: approve USDC
     alert('Step 2 of 3: Approving USDC spend...')
-    await writeContract({
+    await writeContractAsync({
       address: USDC_ADDRESS,
       abi: USDC_ABI,
       functionName: 'approve',
@@ -1045,7 +1080,7 @@ export function Marketplace() {
 
     // Step 3: fund escrow with real jobId
     alert('Step 3 of 3: Locking USDC in escrow...')
-    await writeContract({
+    await writeContractAsync({
       address: AGENTIC_COMMERCE_ADDRESS,
       abi: AGENTIC_COMMERCE_ABI,
       functionName: 'fund',
