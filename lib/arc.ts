@@ -30,7 +30,7 @@ export const wagmiConfig = createConfig({
     [arcTestnet.id]: http('https://rpc.testnet.arc.network'),
   },
   connectors: [
-    injected(),
+    injected({ target: 'metaMask' }),
   ],
   ssr: true,
 })

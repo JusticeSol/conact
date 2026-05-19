@@ -11,6 +11,48 @@ import '@rainbow-me/rainbowkit/styles.css'
 
 const queryClient = new QueryClient()
 
+const AGENTIC_COMMERCE_ADDRESS = '0x0747EEf0706327138c69792bF28Cd525089e4583'
+const USDC_ADDRESS = '0x3600000000000000000000000000000000000000'
+
+const AGENTIC_COMMERCE_ABI = [
+  {
+    type: 'function',
+    name: 'createJob',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'provider', type: 'address' },
+      { name: 'evaluator', type: 'address' },
+      { name: 'expiredAt', type: 'uint256' },
+      { name: 'description', type: 'string' },
+      { name: 'hook', type: 'address' },
+    ],
+    outputs: [{ name: 'jobId', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'fund',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'jobId', type: 'uint256' },
+      { name: 'optParams', type: 'bytes' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'event',
+    name: 'JobCreated',
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'jobId', type: 'uint256' },
+      { indexed: true, name: 'client', type: 'address' },
+      { indexed: true, name: 'provider', type: 'address' },
+      { indexed: false, name: 'evaluator', type: 'address' },
+      { indexed: false, name: 'expiredAt', type: 'uint256' },
+      { indexed: false, name: 'hook', type: 'address' },
+    ],
+  },
+] as const
+
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
 const JOBS = [
@@ -81,6 +123,19 @@ const IDENTITY_REGISTRY_ABI = [
       { indexed: true, name: 'to', type: 'address' },
       { indexed: true, name: 'tokenId', type: 'uint256' },
     ],
+  },
+] as const
+
+const USDC_ABI = [
+  {
+    type: 'function',
+    name: 'approve',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
   },
 ] as const
 
@@ -263,7 +318,7 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
   const handleComplete = async () => {
     setStep("submitting");
     // Production (evaluator's wallet):
-    //   await writeContractAsync({
+    //   await writeContract({
     //     address: '0x0747EEf0706327138c69792bF28Cd525089e4583',
     //     abi: AGENTIC_COMMERCE_ABI,
     //     functionName: 'complete',
@@ -371,7 +426,7 @@ function RejectJobModal({ job, onClose, onRejected }) {
   const handleReject = async () => {
     setStep("submitting");
     // Production:
-    //   await writeContractAsync({
+    //   await writeContract({
     //     address: '0x0747EEf0706327138c69792bF28Cd525089e4583',
     //     abi: AGENTIC_COMMERCE_ABI,
     //     functionName: 'reject',
@@ -677,17 +732,29 @@ function AgentRegistration({ onRegistered }) {
       params: [{ chainId: '0x4CE332' }],
     })
   } catch (switchError) {
-    // Try the other chain ID format
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x4cef52' }],
-      })
-    } catch (err) {
-      console.log('Could not switch network:', err)
+    if ((switchError as any).code === 4902) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x4CE332',
+            chainName: 'Arc Testnet',
+            rpcUrls: ['https://rpc.testnet.arc.network'],
+            nativeCurrency: { 
+              name: 'USDC', 
+              symbol: 'USDC', 
+              decimals: 18 
+            },
+            blockExplorerUrls: ['https://testnet.arcscan.app'],
+          }]
+        })
+      } catch (addError) {
+        console.log('Could not add network:', addError)
+      }
     }
   }
 }
+
   setRegStep("registering")
 
   try {
@@ -702,7 +769,7 @@ function AgentRegistration({ onRegistered }) {
 
     const metadataUri = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`
 
-    const txHash = await writeContractAsync({
+    const txHash = await writeContract({
       address: IDENTITY_REGISTRY_ADDRESS,
       abi: IDENTITY_REGISTRY_ABI,
       functionName: 'register',
@@ -743,6 +810,19 @@ function AgentRegistration({ onRegistered }) {
   }
 }
 }
+
+const USDC_ABI = [
+  {
+    type: 'function',
+    name: 'approve',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+] as const
   if(regStep==="done"&&agent)return(<div style={{padding:"26px 30px",maxWidth:500}} className="fade-in">
     <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:16}}><div style={{width:24,height:24,borderRadius:"50%",background:"#061a10",border:"1px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",color:"#22c55e",fontSize:11}}>✓</div><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#22c55e"}}>Agent registered on Arc</h1></div>
     <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:13,padding:16,marginBottom:12}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:34,height:34,borderRadius:8,background:cb(agent.capabilities[0]||"Writing"),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:12,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.address)}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"#4a4d66",marginBottom:1}}>AGENT ID</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#6b7fff"}}>#{agent.id}</div></div></div>
@@ -811,6 +891,8 @@ function AgentDashboard({ agent, feedbackHistory, activeJobs, deliverableMap, on
 // ─── APP ─────────────────────────────────────────────────────────────────────
 
 export function Marketplace() {
+  const { writeContractAsync } = useWriteContract()
+  const { address, isConnected } = useAccount()
   const [view,         setView]         = useState("jobs");
   const [sel,          setSel]          = useState(null);
   const [cat,          setCat]          = useState("All");
@@ -831,8 +913,8 @@ export function Marketplace() {
   const [deliverableMap,setDeliverableMap]= useState({});    // jobId → { value, dtype, delivHash, txHash }
   const [feedbackMap,  setFeedbackMap]  = useState({});
   const [feedbackHistory,setFeedbackHistory]= useState([]);
-  const { writeContractAsync } = useWriteContract()
-  const { address, isConnected } = useAccount()
+  const { writeContractAsync: writeContract } = useWriteContract()
+  const { address: walletAddress, isConnected: walletConnected } = useAccount()
 
   const activeJobs   = myAgent ? [FUNDED_JOB] : [];
   const allJobs      = [...JOBS, FUNDED_JOB];
@@ -859,6 +941,132 @@ export function Marketplace() {
   const handleAgentRegistered  = (agent,goJobs) => { setMyAgent(agent); if(goJobs) setView("jobs"); };
 
   const anyModal = feedbackJob||applyJob||submitJob||completeJob||rejectJob;
+
+  const handlePostJob = async () => {
+  if (!walletConnected) {
+    alert('Please connect your wallet first')
+    return
+  }
+
+  if (!canPost) return
+
+  try {
+    if (window.ethereum) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x4CE332' }],
+        })
+      } catch (switchError) {
+        if ((switchError as any).code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x4CE332',
+                chainName: 'Arc Testnet',
+                rpcUrls: ['https://rpc.testnet.arc.network'],
+                nativeCurrency: {
+                  name: 'USDC',
+                  symbol: 'USDC',
+                  decimals: 18
+                },
+                blockExplorerUrls: ['https://testnet.arcscan.app'],
+              }]
+            })
+          } catch (addError) {
+            console.log('Could not add network:', addError)
+          }
+        }
+      }
+    }
+
+    const budgetUnits = BigInt(Math.floor(Number(form.budget) * 1e6))
+    const expiredAt = BigInt(Math.floor(Date.now() / 1000) + 72 * 3600)
+    const zeroAddress = '0x0000000000000000000000000000000000000000'
+
+    // Step 1: createJob
+    alert('Step 1 of 3: Creating job on Arc...')
+    const createHash = await writeContract({
+      address: AGENTIC_COMMERCE_ADDRESS,
+      abi: AGENTIC_COMMERCE_ABI,
+      functionName: 'createJob',
+      args: [
+        walletAddress,
+        walletAddress,
+        expiredAt,
+        form.description || form.title,
+        zeroAddress,
+      ],
+    })
+
+    // Wait for receipt and extract jobId from event
+    alert('Waiting for confirmation...')
+    const { createPublicClient, http, decodeEventLog } = await import('viem')
+    const { arcTestnet } = await import('../../lib/arc')
+    
+    const publicClient = createPublicClient({
+      chain: arcTestnet,
+      transport: http('https://rpc.testnet.arc.network'),
+    })
+
+    const receipt = await publicClient.waitForTransactionReceipt({ 
+      hash: createHash as `0x${string}`
+    })
+
+    let jobId = BigInt(0)
+    for (const log of receipt.logs) {
+      try {
+        const decoded = decodeEventLog({
+          abi: AGENTIC_COMMERCE_ABI,
+          data: log.data,
+          topics: log.topics,
+        })
+        if (decoded.eventName === 'JobCreated') {
+          jobId = (decoded.args as any).jobId
+          break
+        }
+      } catch { continue }
+    }
+
+    if (jobId === BigInt(0)) {
+      alert('Could not get job ID from transaction. Please try again.')
+      return
+    }
+
+    // Step 2: approve USDC
+    alert('Step 2 of 3: Approving USDC spend...')
+    await writeContract({
+      address: USDC_ADDRESS,
+      abi: USDC_ABI,
+      functionName: 'approve',
+      args: [AGENTIC_COMMERCE_ADDRESS, budgetUnits],
+    })
+
+    // Step 3: fund escrow with real jobId
+    alert('Step 3 of 3: Locking USDC in escrow...')
+    await writeContract({
+      address: AGENTIC_COMMERCE_ADDRESS,
+      abi: AGENTIC_COMMERCE_ABI,
+      functionName: 'fund',
+      args: [jobId, '0x'],
+    })
+
+    setPostDone(true)
+
+  } catch (err) {
+    const error = err as any
+    const errorMessage = error?.message || error?.shortMessage || 'Unknown error'
+
+    if (errorMessage.includes('rejected') || errorMessage.includes('denied')) {
+      alert('Transaction cancelled.')
+    } else if (errorMessage.includes('insufficient') || errorMessage.includes('funds')) {
+      alert('Insufficient funds. Get free testnet USDC at faucet.testnet.arc.network')
+    } else {
+      alert(`Transaction failed: ${errorMessage}`)
+    }
+  }
+}
 
   return (
     <div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#09090f",color:"#e6e8f0",minHeight:"100vh",display:"flex",flexDirection:"column",position:"relative"}}>
@@ -968,7 +1176,7 @@ export function Marketplace() {
               <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Description</label><textarea value={form.description} onChange={e=>upd("description",e.target.value)} placeholder="Output format, tone, word count…" style={{minHeight:80}}/></div>
               <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Evaluator</label><select value={form.evaluator} onChange={e=>upd("evaluator",e.target.value)}>{["Manual review","AI validator","Automated","AI validator + Manual"].map(e=><option key={e}>{e}</option>)}</select></div>
               {budgetNum>0&&<div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"12px 14px"}}><div style={{fontSize:9.5,color:"#3a5a7a",marginBottom:7,fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>ESCROW SUMMARY</div>{[{label:"Job payment",val:`${budgetNum} USDC`,c:"#2775ca"},{label:"Platform fee (2%)",val:`${(budgetNum*.02).toFixed(2)} USDC`,c:"#3a5a7a"}].map(r=><div key={r.label} style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12.5,color:"#5a7a9a"}}>{r.label}</span><span style={{fontFamily:"'JetBrains Mono',monospace",color:r.c,fontSize:13}}>{r.val}</span></div>)}<div style={{borderTop:"1px solid #0d1e40",marginTop:7,paddingTop:8,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,color:"#8ab0d0",fontWeight:500}}>Total to escrow</span><span style={{fontFamily:"'JetBrains Mono',monospace",color:"#38bdf8",fontSize:14,fontWeight:500}}>{(budgetNum*1.02).toFixed(2)} USDC</span></div></div>}
-              <button className="btn-pri" disabled={!canPost} onClick={()=>{if(canPost)setPostDone(true);}} style={{padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:600,opacity:canPost?1:.4,cursor:canPost?"pointer":"not-allowed"}}>Fund Escrow &amp; Post Job →</button>
+              <button className="btn-pri" disabled={!canPost} onClick={handlePostJob} style={{padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:600,opacity:canPost?1:.4,cursor:canPost?"pointer":"not-allowed"}}>Fund Escrow &amp; Post Job →</button>
             </div>}
           </div>}
 
