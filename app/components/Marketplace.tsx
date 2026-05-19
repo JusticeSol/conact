@@ -50,6 +50,28 @@ const AGENTIC_COMMERCE_ABI = [
   outputs: [],
   },
   {
+  type: 'function',
+  name: 'complete',
+  stateMutability: 'nonpayable',
+  inputs: [
+    { name: 'jobId', type: 'uint256' },
+    { name: 'reason', type: 'bytes32' },
+    { name: 'optParams', type: 'bytes' },
+  ],
+  outputs: [],
+  },
+  {
+  type: 'function',
+  name: 'reject',
+  stateMutability: 'nonpayable',
+  inputs: [
+    { name: 'jobId', type: 'uint256' },
+    { name: 'reason', type: 'bytes32' },
+    { name: 'optParams', type: 'bytes' },
+  ],
+  outputs: [],
+  },
+  {
     type: 'event',
     name: 'JobCreated',
     anonymous: false,
@@ -325,6 +347,7 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
   const [txHash,  setTxHash]  = useState("");
   const deliv = deliverableMap[job.id] || job.deliverable || null;
   const reasonHash = displayHash(note || "deliverable-approved");
+  const { writeContractAsync: completeContractAsync } = useWriteContract()
 
   const handleComplete = async () => {
     setStep("submitting");
@@ -337,12 +360,35 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
     //   })
     //   Job state: Submitted → Completed
     //   USDC automatically released to provider wallet
-    await sleep(2400);
-    const tx = fakeTx();
-    setTxHash(tx);
-    setStep("done");
-    onCompleted(job.id);
-  };
+  const { keccak256, toHex, createWalletClient, custom, createPublicClient, http } = await import('viem')
+  const { arcTestnet } = await import('../../lib/arc')
+
+  const reasonHash = keccak256(toHex(note || 'deliverable-approved')) as `0x${string}`
+
+  const walletClient = createWalletClient({
+    chain: arcTestnet,
+    transport: custom(window.ethereum),
+  })
+
+  const publicClient = createPublicClient({
+    chain: arcTestnet,
+    transport: http('https://rpc.testnet.arc.network'),
+  })
+
+  const [account] = await walletClient.getAddresses()
+
+  const tx = await walletClient.writeContract({
+    address: AGENTIC_COMMERCE_ADDRESS as `0x${string}`,
+    abi: AGENTIC_COMMERCE_ABI,
+    functionName: 'complete',
+    args: [BigInt(job.id), reasonHash, '0x'],
+    account,
+  })
+
+  setTxHash(tx)
+  setStep("done")
+  onCompleted(job.id)
+};
 
   if (step==="done") return (
     <div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:460,maxWidth:"94vw"}}>
@@ -433,6 +479,7 @@ function RejectJobModal({ job, onClose, onRejected }) {
   const [txHash,  setTxHash]  = useState("");
   const reasonHash = displayHash(reason || "deliverable-rejected");
   const canSubmit  = reason.trim().length > 0;
+  const { writeContractAsync: rejectContractAsync } = useWriteContract()
 
   const handleReject = async () => {
     setStep("submitting");
@@ -445,11 +492,30 @@ function RejectJobModal({ job, onClose, onRejected }) {
     //   })
     //   Job state: Submitted → Rejected
     //   USDC refunded to client wallet
-    await sleep(2200);
-    setTxHash(fakeTx());
-    setStep("done");
-    onRejected(job.id);
-  };
+  const { keccak256, toHex, createWalletClient, custom, http } = await import('viem')
+  const { arcTestnet } = await import('../../lib/arc')
+
+  const reasonHash = keccak256(toHex(reason || 'deliverable-rejected')) as `0x${string}`
+
+  const walletClient = createWalletClient({
+    chain: arcTestnet,
+    transport: custom(window.ethereum),
+  })
+
+  const [account] = await walletClient.getAddresses()
+
+  const tx = await walletClient.writeContract({
+    address: AGENTIC_COMMERCE_ADDRESS as `0x${string}`,
+    abi: AGENTIC_COMMERCE_ABI,
+    functionName: 'reject',
+    args: [BigInt(job.id), reasonHash, '0x'],
+    account,
+  })
+
+  setTxHash(tx)
+  setStep("done")
+  onRejected(job.id)
+};
 
   if (step==="done") return (
     <div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
