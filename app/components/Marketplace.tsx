@@ -1,13 +1,14 @@
 'use client'
 // @ts-nocheck
 
-import { useState } from "react"
+import { useState, useEffect } from "react" 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useWriteContract, useAccount, WagmiProvider } from 'wagmi'
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { wagmiConfig } from '../../lib/arc'
 import '@rainbow-me/rainbowkit/styles.css'
+import { saveJob, saveAgent, getJobs, getAgents } from '../../lib/supabase'
 
 const queryClient = new QueryClient()
 
@@ -199,7 +200,7 @@ const USDC_ABI = [
 const cc = (c: string): string => ({ Writing:"#6b7fff", Curation:"#22c55e", Research:"#f59e0b", Analysis:"#d946ef", "Social Copy":"#38bdf8", Summarisation:"#fb923c", Translation:"#a78bfa", SEO:"#34d399" } as Record<string, string>)[c] || "#7b7e96";
 const cb = (c: string): string => ({ Writing:"#12153a", Curation:"#061a10", Research:"#1c1408", Analysis:"#1e0829", "Social Copy":"#041c2a", Summarisation:"#1c0c04", Translation:"#160e30", SEO:"#061c14" } as Record<string, string>)[c] || "#161822";
 const sc = (s) => s >= 95 ? "#4ade80" : s >= 88 ? "#22c55e" : s >= 70 ? "#f59e0b" : s > 0 ? "#ef4444" : "#3a3d58";
-const trim = (a) => `${a.slice(0,6)}…${a.slice(-4)}`;
+const trim = (a) => a ? `${a.slice(0,6)}…${a.slice(-4)}` : '0x0000…0000';
 const statusSty = (s) => ({
   open:          { color:"#22c55e",  bg:"#061a10" },
   "in-progress": { color:"#f59e0b",  bg:"#1c1408" },
@@ -937,11 +938,22 @@ function AgentRegistration({ onRegistered }) {
 // In production upload metadata to Pinata first
 const metadataUri = `ipfs://conact-testnet-${form.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`
 
-    const txHash = await writeContractAsync({
-      address: IDENTITY_REGISTRY_ADDRESS,
+    const { createWalletClient, custom, http } = await import('viem')
+    const { arcTestnet } = await import('../../lib/arc')
+
+    const walletClient = createWalletClient({
+      chain: arcTestnet,
+      transport: custom(window.ethereum),
+    })
+
+    const [account] = await walletClient.getAddresses()
+
+    const txHash = await walletClient.writeContract({
+      address: IDENTITY_REGISTRY_ADDRESS as `0x${string}`,
       abi: IDENTITY_REGISTRY_ABI,
       functionName: 'register',
       args: [metadataUri],
+      account,
     })
 
     const registered = {
@@ -957,6 +969,17 @@ const metadataUri = `ipfs://conact-testnet-${form.name.replace(/\s+/g, '-').toLo
     }
 
     setAgent(registered)
+    // Save agent to Supabase
+    saveAgent({
+      chain_agent_id: registered.id.toString(),
+      name: registered.name,
+      wallet_address: registered.address,
+      capabilities: registered.capabilities,
+      agent_type: registered.type,
+      version: form.version || '1.0.0',
+      metadata_uri: metadataUri,
+      tx_hash: registered.txHash,
+    })
     setRegStep("done")
     onRegistered(registered)
 
@@ -993,7 +1016,7 @@ const USDC_ABI = [
 ] as const
   if(regStep==="done"&&agent)return(<div style={{padding:"26px 30px",maxWidth:500}} className="fade-in">
     <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:16}}><div style={{width:24,height:24,borderRadius:"50%",background:"#061a10",border:"1px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",color:"#22c55e",fontSize:11}}>✓</div><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#22c55e"}}>Agent registered on Arc</h1></div>
-    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:13,padding:16,marginBottom:12}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:34,height:34,borderRadius:8,background:cb(agent.capabilities[0]||"Writing"),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:12,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.address)}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"#4a4d66",marginBottom:1}}>AGENT ID</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#6b7fff"}}>#{agent.id}</div></div></div>
+    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:13,padding:16,marginBottom:12}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:34,height:34,borderRadius:8,background:cb(agent.capabilities[0]||"Writing"),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:12,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"#4a4d66",marginBottom:1}}>AGENT ID</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#6b7fff"}}>#{agent.id}</div></div></div>
     <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div></div>
     <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"9px 12px",marginBottom:12}}><div style={{fontSize:9,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:3}}>TX</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#5a8abf",wordBreak:"break-all"}}>{agent.txHash}</div></div>
     <div style={{background:"#0a0f08",border:"1px solid #162410",borderRadius:9,padding:"9px 12px",marginBottom:16}}><div style={{fontSize:11.5,color:"#2a4a28",lineHeight:1.6}}>ERC-8004 prevents self-reporting. Reputation is recorded by clients and validators after you complete work.</div></div>
@@ -1030,7 +1053,7 @@ function AgentDashboard({ agent, feedbackHistory, activeJobs, deliverableMap, on
   const latest = feedbackHistory.length ? feedbackHistory[feedbackHistory.length-1].score : (agent.score||0);
   return (<div style={{padding:"24px 28px",maxWidth:620}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px"}}>My Agent</h1><span style={{fontSize:10.5,background:"#12153a",color:"#6b7fff",padding:"3px 8px",borderRadius:6,fontFamily:"'JetBrains Mono',monospace"}}>ID #{agent.id}</span></div>
-    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:13,padding:16,marginBottom:11}}><div style={{display:"flex",alignItems:"center",gap:11,marginBottom:13}}><div style={{width:38,height:38,borderRadius:9,background:cb(agent.capabilities[0]||"Writing"),border:`1px solid ${cc(agent.capabilities[0]||"Writing")}30`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:13,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div style={{flex:1}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14.5,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.address)}</div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:23,color:sc(latest),lineHeight:1}}>{latest||"—"}</div><div style={{fontSize:9,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginTop:1}}>REP SCORE</div></div></div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div></div>
+    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:13,padding:16,marginBottom:11}}><div style={{display:"flex",alignItems:"center",gap:11,marginBottom:13}}><div style={{width:38,height:38,borderRadius:9,background:cb(agent.capabilities[0]||"Writing"),border:`1px solid ${cc(agent.capabilities[0]||"Writing")}30`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:13,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div style={{flex:1}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14.5,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:23,color:sc(latest),lineHeight:1}}>{latest||"—"}</div><div style={{fontSize:9,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginTop:1}}>REP SCORE</div></div></div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:11}}>{[{l:"Jobs completed",v:agent.completed||"0"},{l:"USDC earned",v:agent.earned?"$"+agent.earned.toLocaleString():"0"},{l:"Attestations",v:feedbackHistory.length}].map(s=><div key={s.l} style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:9,padding:"10px 12px"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:500,color:"#c0c4de",marginBottom:2}}>{s.v}</div><div style={{fontSize:10.5,color:"#4a4d66"}}>{s.l}</div></div>)}</div>
     {/* Active jobs */}
     <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"12px 14px",marginBottom:11}}>
@@ -1081,6 +1104,21 @@ export function Marketplace() {
   const [deliverableMap,setDeliverableMap]= useState({});    // jobId → { value, dtype, delivHash, txHash }
   const [feedbackMap,  setFeedbackMap]  = useState({});
   const [feedbackHistory,setFeedbackHistory]= useState([]);
+  const [realJobs,   setRealJobs]   = useState<any[]>([])
+  const [realAgents, setRealAgents] = useState<any[]>([])
+  const [dataLoaded, setDataLoaded] = useState(false)
+  useEffect(() => {
+    const loadData = async () => {
+      const [jobsData, agentsData] = await Promise.all([
+        getJobs(),
+        getAgents(),
+      ])
+      setRealJobs(jobsData)
+      setRealAgents(agentsData)
+      setDataLoaded(true)
+    }
+    loadData()
+  }, [])
   const { writeContractAsync: writeContract } = useWriteContract()
   const { address: walletAddress, isConnected: walletConnected } = useAccount()
 
@@ -1091,7 +1129,16 @@ export function Marketplace() {
   ).filter((j,i,a)=>a.findIndex(x=>x.id===j.id)===i); // deduplicate
 
   const pendingEval  = evalQueue.filter(j=>!completedJobs.has(j.id)&&!rejectedJobs.has(j.id)).length;
-  const jobs         = cat==="All"?JOBS:JOBS.filter(j=>j.category===cat);
+  const displayJobs = realJobs.length > 0 ? realJobs.map((j:any) => ({
+    ...j,
+    poster: j.poster_address || '0x0000',
+    applicants: j.applicants || 0,
+    posted: j.created_at ? new Date(j.created_at).toLocaleDateString() : 'Recently',
+    status: j.status || 'open',
+    requirements: j.requirements || [],
+    evaluator: j.evaluator || 'Manual review',
+  })) : JOBS
+  const jobs = cat==="All" ? displayJobs : displayJobs.filter((j:any) => j.category===cat)
   const escrowTotal  = JOBS.filter(j=>j.status!=="completed").reduce((s,j)=>s+j.budget,0);
   const openCount    = JOBS.filter(j=>j.status==="open").length;
   const upd          = (k,v)=>setForm(f=>({...f,[k]:v}));
@@ -1143,30 +1190,43 @@ export function Marketplace() {
 
     // Step 1: createJob
     alert('Step 1 of 3: Creating job on Arc...')
-    const createHash = await writeContractAsync({
-      address: AGENTIC_COMMERCE_ADDRESS,
+    const { createWalletClient, custom, createPublicClient, http, decodeEventLog } = await import('viem')
+    const { arcTestnet } = await import('../../lib/arc')
+
+    const walletClient = createWalletClient({
+      chain: arcTestnet,
+      transport: custom(window.ethereum),
+    })
+
+    const [account] = await walletClient.getAddresses()
+
+    const createHash = await walletClient.writeContract({
+      address: AGENTIC_COMMERCE_ADDRESS as `0x${string}`,
       abi: AGENTIC_COMMERCE_ABI,
       functionName: 'createJob',
       args: [
-        walletAddress,
-        walletAddress,
+        walletAddress as `0x${string}`,
+        walletAddress as `0x${string}`,
         expiredAt,
         form.description || form.title,
-        zeroAddress,
+        zeroAddress as `0x${string}`,
       ],
+      account,
     })
 
     // Wait for receipt and extract jobId from event
     alert('Waiting for confirmation...')
-    const { createPublicClient, http, decodeEventLog } = await import('viem')
-    const { arcTestnet } = await import('../../lib/arc')
-    
     const publicClient = createPublicClient({
       chain: arcTestnet,
       transport: http('https://rpc.testnet.arc.network'),
     })
+    
+    const publicClient2 = createPublicClient({
+      chain: arcTestnet,
+      transport: http('https://rpc.testnet.arc.network'),
+    })
 
-    const receipt = await publicClient.waitForTransactionReceipt({ 
+    const receipt = await publicClient2.waitForTransactionReceipt({ 
       hash: createHash as `0x${string}`
     })
 
@@ -1192,22 +1252,37 @@ export function Marketplace() {
 
     // Step 2: approve USDC
     alert('Step 2 of 3: Approving USDC spend...')
-    await writeContractAsync({
-      address: USDC_ADDRESS,
+    await walletClient.writeContract({
+      address: USDC_ADDRESS as `0x${string}`,
       abi: USDC_ABI,
       functionName: 'approve',
-      args: [AGENTIC_COMMERCE_ADDRESS, budgetUnits],
+      args: [AGENTIC_COMMERCE_ADDRESS as `0x${string}`, budgetUnits],
+      account,
     })
 
     // Step 3: fund escrow with real jobId
     alert('Step 3 of 3: Locking USDC in escrow...')
-    await writeContractAsync({
-      address: AGENTIC_COMMERCE_ADDRESS,
+    await walletClient.writeContract({
+      address: AGENTIC_COMMERCE_ADDRESS as `0x${string}`,
       abi: AGENTIC_COMMERCE_ABI,
       functionName: 'fund',
       args: [jobId, '0x'],
+      account,
     })
 
+    // Save job to Supabase
+    saveJob({
+      chain_job_id: '0',
+      title: form.title,
+      category: form.category,
+      budget: Number(form.budget),
+      deadline: form.deadline,
+      description: form.description,
+      evaluator: form.evaluator,
+      poster_address: walletAddress || '',
+      tx_hash: createHash as string,
+    })
+    
     setPostDone(true)
 
   } catch (err) {
@@ -1296,7 +1371,7 @@ export function Marketplace() {
           {!showPost&&view==="myagent"&&(myAgent?<AgentDashboard agent={myAgent} feedbackHistory={feedbackHistory} activeJobs={activeJobs} deliverableMap={deliverableMap} onBrowseJobs={()=>setView("jobs")} onSubmitDeliverable={setSubmitJob}/>:<AgentRegistration onRegistered={handleAgentRegistered}/>)}
 
           {/* AGENTS DIR */}
-          {!showPost&&view==="agents"&&<div style={{padding:"22px 24px"}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:3}}>Registered Agents</h1><p style={{fontSize:13,color:"#5c5f7a"}}>{AGENTS.length} agents with onchain identity on Arc</p></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(255px,1fr))",gap:10}}>{AGENTS.map(agent=><div key={agent.id} className="agent-card" style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:11,padding:15}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:33,height:33,borderRadius:8,background:cb(agent.capabilities[0]),border:`1px solid ${cc(agent.capabilities[0])}30`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:11,color:cc(agent.capabilities[0])}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:13.5,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.address)}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:20,color:sc(agent.score),lineHeight:1}}>{agent.score}</div><div style={{fontSize:9,color:"#3a3d58",marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>REP</div></div></div><div style={{display:"flex",gap:5,marginBottom:11,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>{[{l:"JOBS",v:agent.completed},{l:"SUCCESS",v:agent.successRate+"%"},{l:"AVG",v:agent.avgTime}].map(s=><div key={s.l} style={{background:"#080910",borderRadius:6,padding:"7px",textAlign:"center"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:500,color:"#b0b4cc"}}>{s.v}</div><div style={{fontSize:9,color:"#3a3d58",marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{s.l}</div></div>)}</div><div style={{marginTop:10,paddingTop:9,borderTop:"1px solid #14162a",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#3a5a7a"}}>Total earned</span><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:"#2775ca",fontWeight:500}}>{agent.earned.toLocaleString()} USDC</span></div></div>)}</div></div>}
+          {!showPost&&view==="agents"&&<div style={{padding:"22px 24px"}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:3}}>Registered Agents</h1><p style={{fontSize:13,color:"#5c5f7a"}}>{realAgents.length > 0 ? realAgents.length : AGENTS.length} agents with onchain identity on Arc</p></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(255px,1fr))",gap:10}}>{(realAgents.length > 0 ? realAgents : AGENTS).map((agent:any)=><div key={agent.id} className="agent-card" style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:11,padding:15}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:33,height:33,borderRadius:8,background:cb(agent.capabilities[0]),border:`1px solid ${cc(agent.capabilities[0])}30`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:11,color:cc(agent.capabilities[0])}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:13.5,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:20,color:sc(agent.score),lineHeight:1}}>{agent.score}</div><div style={{fontSize:9,color:"#3a3d58",marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>REP</div></div></div><div style={{display:"flex",gap:5,marginBottom:11,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>{[{l:"JOBS",v:agent.completed},{l:"SUCCESS",v:agent.successRate+"%"},{l:"AVG",v:agent.avgTime}].map(s=><div key={s.l} style={{background:"#080910",borderRadius:6,padding:"7px",textAlign:"center"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:500,color:"#b0b4cc"}}>{s.v}</div><div style={{fontSize:9,color:"#3a3d58",marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{s.l}</div></div>)}</div><div style={{marginTop:10,paddingTop:9,borderTop:"1px solid #14162a",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#3a5a7a"}}>Total earned</span><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:"#2775ca",fontWeight:500}}>{agent.earned.toLocaleString()} USDC</span></div></div>)}</div></div>}
 
           {/* JOBS + DETAIL */}
           {!showPost&&view==="jobs"&&<div style={{display:"flex",flex:1,overflow:"hidden"}}>
