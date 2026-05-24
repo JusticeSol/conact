@@ -606,7 +606,7 @@ function RejectJobModal({ job, onClose, onRejected }) {
 
 // ─── EVALUATION DASHBOARD ────────────────────────────────────────────────────
 
-function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJobs, onComplete, onReject }) {
+function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJobs, onComplete, onReject, isMobile }) {
   const [sel, setSel] = useState(queue[0]||null);
 
   const evalTag = (ev) => isAIEval(ev)
@@ -619,9 +619,9 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
   const delivRef = (job) => deliverableMap[job.id] || job.deliverable || null;
 
   return (
-    <div style={{display:"flex",flex:1,overflow:"hidden"}}>
+    <div style={{display:"flex",flex:1,overflow:"hidden",flexDirection:isMobile?"column":"row"}}>  
       {/* ── Queue panel ── */}
-      <div style={{width:252,borderRight:"1px solid #14162a",overflow:"auto",padding:"18px 10px",flexShrink:0}}>
+      <div style={{width:isMobile?"100%":252,maxHeight:isMobile?"40%":"100%",borderRight:"1px solid #14162a",overflow:"auto",padding:"18px 10px",flexShrink:0}}>
         <div style={{marginBottom:16,padding:"0 4px"}}>
           <div style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#fff",marginBottom:2}}>Evaluation Queue</div>
           <div style={{fontSize:12,color:"#5c5f7a"}}>{pending.length} pending · {done.length} resolved</div>
@@ -714,10 +714,10 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                 {deliv ? <>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
                     <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#040e14",color:"#38bdf8",border:"1px solid #0d2a40"}}>{deliv.dtype||"ipfs"}</span>
-                    <span style={{fontSize:12.5,color:"#7090b0",wordBreak:"break-all",flex:1}}>{deliv.value}</span>
+                    <span style={{fontSize:isMobile?10:12.5,color:"#7090b0",wordBreak:"break-all",flex:1,overflowWrap:"anywhere"}}>{deliv.value}</span>
                   </div>
                   <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>BYTES32 HASH</div>
-                  <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#38bdf8",wordBreak:"break-all",lineHeight:1.6}}>{displayHash(deliv.value)}</div>
+                  <span style={{fontSize:isMobile?10:12.5,color:"#7090b0",wordBreak:"break-all",flex:1,overflowWrap:"anywhere"}}>{deliv.value}</span>
                 </> : <div style={{fontSize:12.5,color:"#3a5a7a"}}>Deliverable reference not available in this session.</div>}
               </div>
 
@@ -1440,8 +1440,7 @@ export function Marketplace() {
 
           {/* EVALUATE VIEW */}
           {!showPost&&view==="evaluate"&&(
-            <EvaluationDashboard queue={evalQueue} deliverableMap={deliverableMap} completedJobs={completedJobs} rejectedJobs={rejectedJobs}
-              onComplete={(job)=>setCompleteJob(job)} onReject={(job)=>setRejectJob(job)}/>
+            <EvaluationDashboard queue={evalQueue} deliverableMap={deliverableMap} completedJobs={completedJobs} rejectedJobs={rejectedJobs} onComplete={(job)=>setCompleteJob(job)} onReject={(job)=>setRejectJob(job)} isMobile={isMobile}/>
           )}
 
           {/* MY AGENT */}
