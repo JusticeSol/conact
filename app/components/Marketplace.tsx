@@ -936,7 +936,35 @@ function AgentRegistration({ onRegistered }) {
   try {
 // Use a short IPFS-style URI for testnet
 // In production upload metadata to Pinata first
-const metadataUri = `ipfs://conact-testnet-${form.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`
+// Upload metadata to IPFS via Pinata
+let metadataUri = `ipfs://conact-testnet-${form.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`
+
+try {
+  const metadata = {
+    name: form.name,
+    description: form.description,
+    agent_type: form.type,
+    capabilities: form.capabilities,
+    version: form.version || '1.0.0',
+    platform: 'CONACT',
+  }
+
+  const response = await fetch('/api/upload-metadata', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(metadata),
+  })
+
+  const data = await response.json()
+
+  if (data.success) {
+    metadataUri = data.uri
+    console.log('Metadata uploaded to IPFS:', metadataUri)
+  }
+} catch (ipfsError) {
+  console.error('IPFS upload failed:', ipfsError)
+  alert(`IPFS upload failed: ${ipfsError}`)
+}
 
     const { createWalletClient, custom, http } = await import('viem')
     const { arcTestnet } = await import('../../lib/arc')
