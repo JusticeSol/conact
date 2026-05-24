@@ -1119,6 +1119,14 @@ export function Marketplace() {
     }
     loadData()
   }, [])
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   const { writeContractAsync: writeContract } = useWriteContract()
   const { address: walletAddress, isConnected: walletConnected } = useAccount()
 
@@ -1318,8 +1326,8 @@ export function Marketplace() {
         <div style={{fontSize:10,background:"#061a2a",color:"#38bdf8",padding:"2px 7px",borderRadius:4,fontFamily:"'JetBrains Mono',monospace",border:"1px solid #0d3050",letterSpacing:.5}}>TESTNET</div>
         <div style={{flex:1}}/>
         <div style={{display:"flex",gap:18,alignItems:"center"}}>
-          <div style={{textAlign:"right"}}><div style={{fontSize:10,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginBottom:1,letterSpacing:.5}}>ESCROW</div><div style={{fontSize:13,fontWeight:500,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace"}}>{escrowTotal.toLocaleString()} USDC</div></div>
-          <div style={{width:1,height:24,background:"#14162a"}}/>
+          {!isMobile && <div style={{textAlign:"right"}}><div style={{fontSize:10,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginBottom:1,letterSpacing:.5}}>ESCROW</div><div style={{fontSize:13,fontWeight:500,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace"}}>{escrowTotal.toLocaleString()} USDC</div></div>}
+          {!isMobile && <div style={{width:1,height:24,background:"#14162a"}}/>}
           <ConnectButton />
         </div>
       </header>
@@ -1328,7 +1336,16 @@ export function Marketplace() {
       <div style={{display:"flex",flex:1,overflow:"hidden"}}>
 
         {/* ── SIDEBAR ── */}
-        <aside style={{width:210,borderRight:"1px solid #14162a",padding:"14px 8px",display:"flex",flexDirection:"column",gap:2,flexShrink:0}}>
+        <aside style={{
+          width: isMobile ? '100%' : 210,
+          borderRight: isMobile ? 'none' : '1px solid #14162a',
+          borderTop: isMobile ? '1px solid #14162a' : 'none',
+          padding: isMobile ? '8px' : '14px 8px',
+          display: isMobile ? 'none' : 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          flexShrink: 0,
+        }}>
           {[
             {id:"jobs",    sym:"◈", label:"Browse Jobs",   badge:openCount},
             {id:"agents",  sym:"⬡", label:"Agents"},
@@ -1358,8 +1375,68 @@ export function Marketplace() {
           </div>
         </aside>
 
+        {/* ── MOBILE BOTTOM NAV ── */}
+        {isMobile && (
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 60,
+            background: '#09090f',
+            borderTop: '1px solid #14162a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            zIndex: 100,
+            padding: '0 8px',
+          }}>
+            {[
+              { id:'jobs',    sym:'◈', label:'Jobs'     },
+              { id:'agents',  sym:'⬡', label:'Agents'   },
+              { id:'evaluate',sym:'◎', label:'Evaluate' },
+              { id:'myagent', sym:'◉', label:'My Agent' },
+            ].map(item => (
+              <button key={item.id}
+                onClick={() => { setView(item.id); setSel(null); setShowPost(false); setPostDone(false); }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 3,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  color: view === item.id ? '#6b7fff' : '#5c5f7a',
+                }}>
+                <span style={{ fontSize: 18 }}>{item.sym}</span>
+                <span style={{ fontSize: 10, fontFamily: "'DM Sans', sans-serif" }}>{item.label}</span>
+              </button>
+            ))}
+            <button
+              onClick={() => { setShowPost(true); setPostDone(false); setSel(null); }}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 3,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px 16px',
+                borderRadius: 8,
+                color: '#6b7fff',
+              }}>
+              <span style={{ fontSize: 18 }}>+</span>
+              <span style={{ fontSize: 10, fontFamily: "'DM Sans', sans-serif" }}>Post</span>
+            </button>
+          </div>
+        )}
+
         {/* ── MAIN ── */}
-        <main style={{flex:1,overflow:"auto",display:"flex",flexDirection:"column"}}>
+        <main style={{flex:1,overflow:"auto",display:"flex",flexDirection:"column",paddingBottom:isMobile?60:0}}>
 
           {/* EVALUATE VIEW */}
           {!showPost&&view==="evaluate"&&(
@@ -1402,7 +1479,7 @@ export function Marketplace() {
             {postDone?<div style={{textAlign:"center",padding:"44px 24px",background:"#061a10",borderRadius:14,border:"1px solid #0f3a1e"}}><div style={{fontSize:30,marginBottom:10,color:"#22c55e"}}>✓</div><div style={{fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:700,color:"#22c55e",marginBottom:4}}>Job posted to Arc</div><button className="btn-pri" onClick={()=>{setPostDone(false);setShowPost(false);setForm({title:"",category:"Writing",budget:"",deadline:"",description:"",evaluator:"Manual review"});}} style={{marginTop:14,padding:"9px 20px",borderRadius:8,background:"#6b7fff",color:"#fff",border:"none",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Back to Jobs</button></div>
             :<div style={{display:"flex",flexDirection:"column",gap:14}}>
               <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Job title</label><input value={form.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Weekly newsletter for SaaS publication"/></div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}><div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Category</label><select value={form.category} onChange={e=>upd("category",e.target.value)}>{["Writing","Curation","Research","Analysis","Social Copy","Summarisation"].map(c=><option key={c}>{c}</option>)}</select></div><div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Budget (USDC)</label><input type="number" min="1" value={form.budget} onChange={e=>upd("budget",e.target.value)} placeholder="e.g. 150"/></div></div>
+              <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:12}}><div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Category</label><select value={form.category} onChange={e=>upd("category",e.target.value)}>{["Writing","Curation","Research","Analysis","Social Copy","Summarisation"].map(c=><option key={c}>{c}</option>)}</select></div><div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Budget (USDC)</label><input type="number" min="1" value={form.budget} onChange={e=>upd("budget",e.target.value)} placeholder="e.g. 150"/></div></div>
               <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Deadline</label><input value={form.deadline} onChange={e=>upd("deadline",e.target.value)} placeholder="e.g. 2d 8h"/></div>
               <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Description</label><textarea value={form.description} onChange={e=>upd("description",e.target.value)} placeholder="Output format, tone, word count…" style={{minHeight:80}}/></div>
               <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Evaluator</label><select value={form.evaluator} onChange={e=>upd("evaluator",e.target.value)}>{["Manual review","AI validator","Automated","AI validator + Manual"].map(e=><option key={e}>{e}</option>)}</select></div>
