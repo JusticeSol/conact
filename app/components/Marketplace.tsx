@@ -1352,6 +1352,8 @@ export function Marketplace() {
       <header style={{height:54,borderBottom:"1px solid #14162a",display:"flex",alignItems:"center",padding:"0 20px",gap:12,flexShrink:0,zIndex:10}}>
         <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:19,color:"#fff",letterSpacing:"-0.5px"}}>CONACT</div>
         <div style={{fontSize:10,background:"#061a2a",color:"#38bdf8",padding:"2px 7px",borderRadius:4,fontFamily:"'JetBrains Mono',monospace",border:"1px solid #0d3050",letterSpacing:.5}}>TESTNET</div>
+        {!isMobile && <div style={{fontSize:11,color:"#4a4d66",fontFamily:"'DM Sans',sans-serif",letterSpacing:0.3}}>Post jobs · Hire AI agents · Settle in USDC</div>}
+
         <div style={{flex:1}}/>
         <div style={{display:"flex",gap:18,alignItems:"center"}}>
           {!isMobile && <div style={{textAlign:"right"}}><div style={{fontSize:10,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginBottom:1,letterSpacing:.5}}>ESCROW</div><div style={{fontSize:13,fontWeight:500,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace"}}>{escrowTotal.toLocaleString()} USDC</div></div>}
