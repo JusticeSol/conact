@@ -40,6 +40,17 @@ const AGENTIC_COMMERCE_ABI = [
     outputs: [],
   },
   {
+    type: 'function',
+    name: 'setBudget',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'jobId', type: 'uint256' },
+      { name: 'amount', type: 'uint256' },
+      { name: 'optParams', type: 'bytes' },
+    ],
+    outputs: [],
+  },
+  {
   type: 'function',
   name: 'submit',
   stateMutability: 'nonpayable',
@@ -97,9 +108,6 @@ const JOBS = [
   { id:5,  title:"Product Launch Press Release",            category:"Writing",      budget:180, deadline:"3d 4h",     applicants:3, status:"open",       poster:"0x1c2d3e4f5a6b7890", posted:"6h ago",  description:"600-word press release for a fintech SaaS product launch. Key benefits, executive quotes, clear CTA. AP style.", requirements:["Writing capability","88+ reputation score"], evaluator:"Manual review" },
   { id:6,  title:"YouTube Descriptions — 10 Videos",        category:"Social Copy",  budget:75,  deadline:"1d 6h",     applicants:1, status:"open",       poster:"0x6d7e8f9a0b1c2345", posted:"8h ago",  description:"SEO-optimised descriptions for 10 personal finance YouTube videos. 200–250 words each with keywords, timestamps, and links.", requirements:["Social Copy capability"], evaluator:"Automated" },
   { id:7,  title:"Podcast Show Notes — 5 Episodes",         category:"Summarisation",budget:110, deadline:"2d 0h",     applicants:2, status:"open",       poster:"0x0e1f2a3b4c5d6789", posted:"12h ago", description:"Structured show notes for 5 podcast episodes. 3-sentence summary, 5 key takeaways, guest bio, timestamped chapters.", requirements:["Summarisation capability"], evaluator:"Manual review" },
-  { id:8,  title:"SEO Blog: Stablecoins 101 (2,000 words)", category:"Writing",      budget:150, deadline:"Delivered", applicants:1, status:"submitted",  poster:"0x742d35Cc6634C053", posted:"3d ago",  description:"2,000-word introductory article on stablecoins for a fintech publication. Cover USDC, USDT, DAI with clear explainers and FAQ.", requirements:["Writing capability","Research a plus","Delivered within 24h"], evaluator:"Manual review",
-    provider:{ name:"ContentBot Alpha", address:"0x1a2b3c4d5e6f7890", agentId:1 },
-    deliverable:{ value:"ipfs://bafkreih4y2vabcdef123456789xyz", dtype:"ipfs" } },
 ];
 
 const FUNDED_JOB = {
@@ -224,6 +232,18 @@ const displayHash = (s) => {
   const p=(n)=>(n>>>0).toString(16).padStart(8,"0");
   return"0x"+p(h1^0x5f3759df)+p(h2^0xdeadbeef)+p(h1*2654435761>>>0)+p(h2*2246822519>>>0)+p(h1^h2^0x1337c0de)+p(h2^h1^0xfeedface)+p(h1>>>3)+p(h2>>>5);
 };
+
+const fetchIPFSContent = async (uri: string) => {
+  if (!uri.startsWith('ipfs://')) return null
+  const hash = uri.replace('ipfs://', '')
+  try {
+    const res = await fetch(`https://gateway.pinata.cloud/ipfs/${hash}`)
+    const data = await res.json()
+    return data
+  } catch {
+    return null
+  }
+}
 
 // AI evaluation — deterministic per job+deliverable combination
 const runAIEval = (job, delivHash) => {
@@ -404,7 +424,7 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
     address: AGENTIC_COMMERCE_ADDRESS as `0x${string}`,
     abi: AGENTIC_COMMERCE_ABI,
     functionName: 'complete',
-    args: [BigInt(job.id), reasonHash, '0x'],
+    args: [BigInt(job.chain_job_id || job.id), reasonHash, '0x'],
     account,
   })
 
@@ -459,7 +479,16 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
       {deliv&&<div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:10,padding:"11px 13px",marginBottom:14}}>
         <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:5}}>SUBMITTED DELIVERABLE</div>
         <div style={{fontSize:12,color:"#7090b0",marginBottom:6,wordBreak:"break-all"}}>{deliv.value}</div>
-        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#38bdf8",wordBreak:"break-all"}}>{displayHash(deliv.value).slice(0,34)}…</div>
+        <a 
+      href={deliv.value.startsWith('ipfs://') 
+        ? `https://gateway.pinata.cloud/ipfs/${deliv.value.replace('ipfs://', '')}` 
+        : deliv.value}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{fontSize:12,color:"#38bdf8",marginBottom:6,wordBreak:"break-all",display:"block",textDecoration:"underline"}}
+    >
+      {deliv.value}
+    </a>
       </div>}
 
       {/* USDC release */}
@@ -531,7 +560,7 @@ function RejectJobModal({ job, onClose, onRejected }) {
     address: AGENTIC_COMMERCE_ADDRESS as `0x${string}`,
     abi: AGENTIC_COMMERCE_ABI,
     functionName: 'reject',
-    args: [BigInt(job.id), reasonHash, '0x'],
+    args: [BigInt(job.chain_job_id || job.id), reasonHash, '0x'],
     account,
   })
 
@@ -608,6 +637,20 @@ function RejectJobModal({ job, onClose, onRejected }) {
 
 function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJobs, onComplete, onReject, isMobile }) {
   const [sel, setSel] = useState(queue[0]||null);
+  const [jobContent, setJobContent] = useState<any>(null)
+  const [loadingContent, setLoadingContent] = useState(false)
+
+  useEffect(() => {
+    if (!sel) { setJobContent(null); return }
+    const deliv = delivRef(sel)
+    if (!deliv?.value) return
+  
+    setLoadingContent(true)
+    fetchIPFSContent(deliv.value).then(data => {
+      setJobContent(data)
+      setLoadingContent(false)
+    })
+  }, [sel])
 
   const evalTag = (ev) => isAIEval(ev)
     ? <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#040e14",color:"#38bdf8",border:"1px solid #0d2a40"}}>AI</span>
@@ -616,7 +659,7 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
   const pending = queue.filter(j=>!completedJobs.has(j.id)&&!rejectedJobs.has(j.id));
   const done    = queue.filter(j=>completedJobs.has(j.id)||rejectedJobs.has(j.id));
 
-  const delivRef = (job) => deliverableMap[job.id] || job.deliverable || null;
+  const delivRef = (job) => deliverableMap[job.id] || job.deliverable || (job.deliverable_uri ? { value: job.deliverable_uri, dtype: 'ipfs' } : null)
 
   return (
     <div style={{display:"flex",flex:1,overflow:"hidden",flexDirection:isMobile?"column":"row"}}>  
@@ -714,7 +757,16 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                 {deliv ? <>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
                     <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#040e14",color:"#38bdf8",border:"1px solid #0d2a40"}}>{deliv.dtype||"ipfs"}</span>
-                    <span style={{fontSize:isMobile?10:12.5,color:"#7090b0",wordBreak:"break-all",flex:1,overflowWrap:"anywhere"}}>{deliv.value}</span>
+                    <a 
+                      href={deliv.value.startsWith('ipfs://') 
+                        ? `https://gateway.pinata.cloud/ipfs/${deliv.value.replace('ipfs://', '')}` 
+                        : deliv.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{fontSize:isMobile?10:12.5,color:"#38bdf8",wordBreak:"break-all",flex:1,overflowWrap:"anywhere",textDecoration:"underline"}}
+                    >
+                      {deliv.value}
+                    </a>
                   </div>
                   <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>BYTES32 HASH</div>
                   <span style={{fontSize:isMobile?10:12.5,color:"#7090b0",wordBreak:"break-all",flex:1,overflowWrap:"anywhere"}}>{deliv.value}</span>
@@ -726,8 +778,13 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                 <AIEvalPanel key={sel.id} job={sel} delivHash={deliv?displayHash(deliv.value):null}/>
               </div>}
 
-              {/* Manual review notes (only for non-AI or manual override) */}
-              {!resolved&&<div style={{marginBottom:16}}>
+              {/* Content viewer + Manual review notes */}
+              {!resolved&&<div>
+                {(loadingContent || jobContent) && <div style={{marginBottom:14}}>
+                  <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:8}}>GENERATED CONTENT</div>
+                  {loadingContent && <div style={{background:"#080910",border:"1px solid #1a1e30",borderRadius:10,padding:"16px",textAlign:"center"}}><div className="spin" style={{width:20,height:20,borderRadius:"50%",border:"2px solid #1e2238",borderTopColor:"#6b7fff",margin:"0 auto 8px"}}/><div style={{fontSize:12,color:"#5c5f7a"}}>Loading content from IPFS...</div></div>}
+                  {!loadingContent && jobContent && <div style={{background:"#080910",border:"1px solid #1a1e30",borderRadius:10,padding:"16px",maxHeight:320,overflowY:"auto"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{fontSize:11,color:"#4a4d66",fontFamily:"'JetBrains Mono',monospace"}}>{jobContent.agent}</div><a href={delivRef(sel)?.value?.startsWith('ipfs://')?`https://gateway.pinata.cloud/ipfs/${delivRef(sel)?.value?.replace('ipfs://','')}`:'#'} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#38bdf8",textDecoration:"none"}}>View on IPFS ↗</a></div><div style={{fontSize:13,color:"#a0a3b8",lineHeight:1.8,whiteSpace:"pre-wrap",fontFamily:"'DM Sans',sans-serif"}}>{jobContent.content}</div></div>}
+                </div>}
                 <label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:5}}>
                   {isAIEval(sel.evaluator)?"Override notes (optional)":"Review notes (optional)"}
                 </label>
@@ -856,7 +913,7 @@ function SubmitDeliverableModal({ job, myAgent, onClose, onSubmit }) {
       address: AGENTIC_COMMERCE_ADDRESS,
       abi: AGENTIC_COMMERCE_ABI,
       functionName: 'submit',
-      args: [BigInt(job.id), deliverableHash, '0x'],
+      args: [BigInt(job.chain_job_id || job.id), deliverableHash, '0x'],
     })
 
     setResult({ txHash, delivHash: deliverableHash, value, dtype })
@@ -1135,7 +1192,7 @@ export function Marketplace() {
   const [realJobs,   setRealJobs]   = useState<any[]>([])
   const [realAgents, setRealAgents] = useState<any[]>([])
   const [dataLoaded, setDataLoaded] = useState(false)
-  useEffect(() => {
+
     const loadData = async () => {
       const [jobsData, agentsData] = await Promise.all([
         getJobs(),
@@ -1145,8 +1202,10 @@ export function Marketplace() {
       setRealAgents(agentsData)
       setDataLoaded(true)
     }
-    loadData()
-  }, [])
+
+    useEffect(() => {
+      loadData()
+    }, [])
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -1160,7 +1219,10 @@ export function Marketplace() {
 
   const activeJobs   = myAgent ? [FUNDED_JOB] : [];
   const allJobs      = [...JOBS, FUNDED_JOB];
-  const evalQueue    = JOBS.filter(j=>j.status==="submitted").concat(
+  const evalQueue = [
+    ...JOBS.filter(j=>j.status==="submitted"),
+    ...realJobs.filter((j:any) => j.status==="submitted"),
+  ].concat(
     Object.keys(deliverableMap).map(id=>allJobs.find(j=>j.id===Number(id))).filter(Boolean)
   ).filter((j,i,a)=>a.findIndex(x=>x.id===j.id)===i); // deduplicate
 
@@ -1225,7 +1287,7 @@ export function Marketplace() {
     const zeroAddress = '0x0000000000000000000000000000000000000000'
 
     // Step 1: createJob
-    alert('Step 1 of 3: Creating job on Arc...')
+    alert('Step 1 of 4: Creating job on Arc...')
     const { createWalletClient, custom, createPublicClient, http, decodeEventLog } = await import('viem')
     const { arcTestnet } = await import('../../lib/arc')
 
@@ -1241,7 +1303,7 @@ export function Marketplace() {
       abi: AGENTIC_COMMERCE_ABI,
       functionName: 'createJob',
       args: [
-        walletAddress as `0x${string}`,
+        (process.env.NEXT_PUBLIC_AGENT_WALLET || walletAddress) as `0x${string}`,
         walletAddress as `0x${string}`,
         expiredAt,
         form.description || form.title,
@@ -1286,8 +1348,20 @@ export function Marketplace() {
       return
     }
 
+    // Agent wallet sets budget (provider must call setBudget)
+    alert('Step 2 of 4: Agent setting job budget...')
+    const setBudgetRes = await fetch('/api/set-budget', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId: jobId.toString(), amount: form.budget }),
+    })
+    const setBudgetData = await setBudgetRes.json()
+    if (!setBudgetData.success) {
+      throw new Error('Failed to set budget: ' + setBudgetData.error)
+    }
+
     // Step 2: approve USDC
-    alert('Step 2 of 3: Approving USDC spend...')
+    alert('Step 3 of 4: Approving USDC spend...')
     await walletClient.writeContract({
       address: USDC_ADDRESS as `0x${string}`,
       abi: USDC_ABI,
@@ -1297,7 +1371,7 @@ export function Marketplace() {
     })
 
     // Step 3: fund escrow with real jobId
-    alert('Step 3 of 3: Locking USDC in escrow...')
+    alert('Step 4 of 4: Locking USDC in escrow...')
     await walletClient.writeContract({
       address: AGENTIC_COMMERCE_ADDRESS as `0x${string}`,
       abi: AGENTIC_COMMERCE_ABI,
@@ -1307,8 +1381,8 @@ export function Marketplace() {
     })
 
     // Save job to Supabase
-    saveJob({
-      chain_job_id: '0',
+    const savedJob = await saveJob({
+      chain_job_id: jobId.toString(),
       title: form.title,
       category: form.category,
       budget: Number(form.budget),
@@ -1317,6 +1391,37 @@ export function Marketplace() {
       evaluator: form.evaluator,
       poster_address: walletAddress || '',
       tx_hash: createHash as string,
+    })
+
+    const supabaseJobId = savedJob?.[0]?.id
+    console.log('Supabase job saved, ID:', supabaseJobId, 'savedJob:', JSON.stringify(savedJob))
+    
+    // Trigger autonomous agent
+    console.log('Triggering agent...')
+    fetch('/api/agent-execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        job: {
+          id: supabaseJobId || Date.now(),
+          chain_job_id: jobId.toString(),
+          title: form.title,
+          category: form.category,
+          budget: Number(form.budget),
+          deadline: form.deadline,
+          description: form.description,
+          requirements: [],
+        }
+      }),
+    }).then(res => {
+      console.log('Agent response status:', res.status)
+      return res.json()
+    }).then(data => {
+      console.log('Agent executed:', JSON.stringify(data))
+      // Refresh jobs after agent completes
+      setTimeout(() => loadData(), 3000)
+    }).catch(err => {
+      console.error('Agent fetch error:', err)
     })
     
     setPostDone(true)
