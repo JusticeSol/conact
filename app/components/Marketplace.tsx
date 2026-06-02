@@ -1471,7 +1471,6 @@ export function Marketplace() {
 
         <div style={{flex:1}}/>
         <div style={{display:"flex",gap:18,alignItems:"center"}}>
-          {!isMobile && <div style={{textAlign:"right"}}><div style={{fontSize:10,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginBottom:1,letterSpacing:.5}}>ESCROW</div><div style={{fontSize:13,fontWeight:500,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace"}}>{escrowTotal.toLocaleString()} USDC</div></div>}
           {!isMobile && <div style={{width:1,height:24,background:"#14162a"}}/>}
           <ConnectButton />
         </div>
