@@ -1247,9 +1247,19 @@ export function Marketplace() {
   const handleFeedbackSubmit   = (data) => { setFeedbackMap(m=>({...m,[feedbackJob.id]:data})); setFeedbackHistory(h=>[...h,data]); setFeedbackJob(null); };
   const handleApplySubmit      = (data) => { setAppliedJobs(s=>new Set([...s,data.jobId])); setApplyJob(null); };
   const handleDeliverableSubmit= (data) => { setDeliverableMap(m=>({...m,[data.jobId]:{value:data.value,dtype:data.dtype,delivHash:data.delivHash}})); setSubmitJob(null); };
-  const handleCompleted        = (jobId) => { setCompletedJobs(s=>new Set([...s,jobId])); };
+  const handleCompleted = async (jobId: any) => {
+    setCompletedJobs((s: any) => new Set([...Array.from(s), jobId]))
+    const { supabase } = await import('../../lib/supabase')
+    await supabase.from('jobs').update({ status: 'completed' }).eq('id', jobId)
+    setTimeout(() => loadData(), 1000)
+  }
   const handleCompleteClose    = (rateJob) => { setCompleteJob(null); if(rateJob) setFeedbackJob(rateJob); };
-  const handleRejected         = (jobId) => { setRejectedJobs(s=>new Set([...s,jobId])); };
+  const handleRejected = async (jobId: any) => {
+    setRejectedJobs((s: any) => new Set([...Array.from(s), jobId]))
+    const { supabase } = await import('../../lib/supabase')
+    await supabase.from('jobs').update({ status: 'rejected' }).eq('id', jobId)
+    setTimeout(() => loadData(), 1000)
+  }
   const handleRejectClose      = () => setRejectJob(null);
   const handleAgentRegistered  = (agent,goJobs) => { setMyAgent(agent); if(goJobs) setView("jobs"); };
 
