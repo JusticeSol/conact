@@ -1252,7 +1252,34 @@ export function Marketplace() {
   const handleCompleted = async (jobId: any) => {
     setCompletedJobs((s: any) => new Set([...Array.from(s), jobId]))
     const { supabase } = await import('../../lib/supabase')
+  
+    // Update job status
     await supabase.from('jobs').update({ status: 'completed' }).eq('id', jobId)
+  
+    // Get job budget
+    const { data: jobData, error: jobError } = await supabase
+      .from('jobs')
+      .select('budget')
+      .eq('id', jobId)
+      .single()
+
+    // Get agent data
+    const { data: agentData, error: agentError } = await supabase
+      .from('agents')
+      .select('completed, earned')
+      .eq('wallet_address', '0xF11391fcB1e3dEC86D6016962E883cc7e1ad7ed5')
+      .single()
+
+    if (agentData) {
+      const { error: updateError } = await supabase
+        .from('agents')
+        .update({
+          completed: (agentData.completed || 0) + 1,
+          earned: (agentData.earned || 0) + (jobData?.budget || 0),
+        })
+        .eq('wallet_address', '0xF11391fcB1e3dEC86D6016962E883cc7e1ad7ed5')
+    }
+
     setTimeout(() => loadData(), 1000)
   }
   const handleCompleteClose    = (rateJob) => { setCompleteJob(null); if(rateJob) setFeedbackJob(rateJob); };
