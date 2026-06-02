@@ -1227,7 +1227,9 @@ export function Marketplace() {
   ).filter((j,i,a)=>a.findIndex(x=>x.id===j.id)===i); // deduplicate
 
   const pendingEval  = evalQueue.filter(j=>!completedJobs.has(j.id)&&!rejectedJobs.has(j.id)).length;
-  const displayJobs = realJobs.length > 0 ? realJobs.map((j:any) => ({
+  const displayJobs = realJobs.length > 0 ? realJobs
+    .filter((j:any) => j.status !== 'completed' && j.status !== 'rejected')
+    .map((j:any) => ({
     ...j,
     poster: j.poster_address || '0x0000',
     applicants: j.applicants || 0,
@@ -1596,7 +1598,7 @@ export function Marketplace() {
           {/* JOBS + DETAIL */}
           {!showPost&&view==="jobs"&&<div style={{display:"flex",flex:1,overflow:"hidden"}}>
             <div style={{flex:1,overflow:"auto",padding:"20px 22px"}}>
-              <div style={{marginBottom:15}}><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:2}}>Open Jobs</h1><p style={{fontSize:13,color:"#5c5f7a"}}>{jobs.length} jobs · {escrowTotal.toLocaleString()} USDC in escrow</p></div>
+              <div style={{marginBottom:15}}><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:2}}>Open Jobs</h1><p style={{fontSize:13,color:"#5c5f7a"}}>{jobs.length} jobs on Arc testnet</p></div>
               <div style={{display:"flex",gap:5,marginBottom:14,flexWrap:"wrap"}}>{CATS.map(c=><button key={c} className={`cat-btn ${cat===c?"on":""}`} onClick={()=>{setCat(c);setSel(null);}} style={{fontSize:12,padding:"5px 10px",borderRadius:6,border:"1px solid #1a1e30",background:"transparent",color:"#6b6e88",fontFamily:"'DM Sans',sans-serif"}}>{c}</button>)}</div>
               <div style={{display:"flex",flexDirection:"column",gap:7}}>{jobs.map(job=>{const ef=jobStatus(job);const ss=statusSty(ef);const isApplied=appliedJobs.has(job.id);return(<div key={job.id} className={`job-card ${sel?.id===job.id?"sel":""}`} onClick={()=>setSel(sel?.id===job.id?null:job)} style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"12px 14px",cursor:"pointer"}}><div style={{display:"flex",alignItems:"flex-start",gap:10}}><div style={{flex:1,minWidth:0}}><div style={{display:"flex",gap:5,marginBottom:5,flexWrap:"wrap"}}><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(job.category),color:cc(job.category),fontWeight:500}}>{job.category}</span><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:ss.bg,color:ss.color}}>{statusLabel(ef)}</span>{isApplied&&<span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20"}}>Applied ✓</span>}</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:14,color:"#e6e8f0",marginBottom:4,lineHeight:1.3}}>{job.title}</div><div style={{display:"flex",gap:11,flexWrap:"wrap"}}><span style={{fontSize:11,color:"#5c5f7a"}}>⏰ {job.deadline}</span><span style={{fontSize:11,color:"#5c5f7a"}}>{job.applicants} applied</span><span style={{fontSize:10.5,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace"}}>{trim(job.poster)}</span></div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#fff",lineHeight:1}}>{job.budget}</div><div style={{fontSize:10.5,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace",marginTop:2}}>USDC</div></div></div></div>);})}</div>
             </div>
