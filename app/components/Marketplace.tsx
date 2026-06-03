@@ -1661,7 +1661,89 @@ export function Marketplace() {
           </div>}
 
           {/* MY JOBS */}
-          {!showPost&&view==="myjobs"&&<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:9}}><div style={{fontSize:24,color:"#3a3d58"}}>▤</div><div style={{fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:600,color:"#5c5f7a"}}>Your posted jobs</div><div style={{fontSize:13,color:"#3a3d58"}}>Connect a wallet to view your jobs</div></div>}
+         {!showPost&&view==="myjobs"&&(
+  <div style={{padding:"22px 24px",flex:1,overflow:"auto"}}>
+    <div style={{marginBottom:18}}>
+      <h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:3}}>My Jobs</h1>
+      <p style={{fontSize:13,color:"#5c5f7a"}}>
+        {walletConnected ? `Jobs posted by ${trim(walletAddress||'')}` : 'Connect a wallet to view your jobs'}
+      </p>
+    </div>
+
+    {!walletConnected ? (
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:9,padding:"60px 0"}}>
+        <div style={{fontSize:24,color:"#3a3d58"}}>▤</div>
+        <div style={{fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:600,color:"#5c5f7a"}}>Connect a wallet to view your jobs</div>
+      </div>
+    ) : (()=>{
+      const myJobs = realJobs.filter((j:any) => 
+        j.poster_address?.toLowerCase() === walletAddress?.toLowerCase()
+      )
+
+      if (myJobs.length === 0) return (
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:9,padding:"60px 0"}}>
+          <div style={{fontSize:24,color:"#3a3d58"}}>▤</div>
+          <div style={{fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:600,color:"#5c5f7a"}}>No jobs posted yet</div>
+          <button className="btn-pri" onClick={()=>setShowPost(true)} style={{padding:"10px 20px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Post your first job →</button>
+        </div>
+      )
+
+      const totalSpent = myJobs.filter((j:any)=>j.status==='completed').reduce((s:number,j:any)=>s+(j.budget||0),0)
+      const completedCount = myJobs.filter((j:any)=>j.status==='completed').length
+
+      return (
+        <div>
+          {/* Stats row */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:16}}>
+            {[
+              {l:"Jobs posted", v:myJobs.length},
+              {l:"Completed", v:completedCount},
+              {l:"USDC spent", v:totalSpent+" USDC"},
+            ].map(s=>(
+              <div key={s.l} style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:9,padding:"10px 12px"}}>
+                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:500,color:"#c0c4de",marginBottom:2}}>{s.v}</div>
+                <div style={{fontSize:10.5,color:"#4a4d66"}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Jobs list */}
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {myJobs.map((job:any)=>{
+              const ss = statusSty(job.status)
+              return (
+                <div key={job.id} style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"13px 15px"}}>
+                  <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",gap:5,marginBottom:5,flexWrap:"wrap"}}>
+                        <span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(job.category),color:cc(job.category),fontWeight:500}}>{job.category}</span>
+                        <span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:ss.bg,color:ss.color}}>{statusLabel(job.status)}</span>
+                      </div>
+                      <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:14,color:"#e6e8f0",marginBottom:4,lineHeight:1.3}}>{job.title}</div>
+                      <div style={{fontSize:11,color:"#5c5f7a"}}>
+                        {new Date(job.created_at).toLocaleDateString()} · {job.evaluator}
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#fff",lineHeight:1}}>{job.budget}</div>
+                      <div style={{fontSize:10.5,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace",marginTop:2}}>USDC</div>
+                    </div>
+                  </div>
+                  {job.deliverable_uri && (
+                    <div style={{marginTop:10,paddingTop:9,borderTop:"1px solid #14162a",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:11,color:"#3a5a7a"}}>Deliverable</span>
+                      <a href={`https://gateway.pinata.cloud/ipfs/${job.deliverable_uri.replace('ipfs://','')}`} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#38bdf8",textDecoration:"none"}}>View on IPFS ↗</a>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )
+    })()}
+  </div>
+)}
 
         </main>
       </div>
