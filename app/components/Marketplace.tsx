@@ -1169,6 +1169,8 @@ function AgentDashboard({ agent, feedbackHistory, activeJobs, deliverableMap, on
 export function Marketplace() {
   const { writeContractAsync } = useWriteContract()
   const { address, isConnected } = useAccount()
+  const [toast, setToast] = useState<{message: string, type: 'info'|'success'|'error'} | null>(null)
+  const showToast = (message: string, type: 'info'|'success'|'error' = 'info', duration = 4000) => { setToast({ message, type }); setTimeout(() => setToast(null), duration) }
   const [view,         setView]         = useState("jobs");
   const [sel,          setSel]          = useState(null);
   const [cat,          setCat]          = useState("All");
@@ -1296,7 +1298,7 @@ export function Marketplace() {
 
   const handlePostJob = async () => {
   if (!walletConnected) {
-    alert('Please connect your wallet first')
+    showToast('Please connect your wallet first', 'error')
     return
   }
 
@@ -1326,7 +1328,7 @@ export function Marketplace() {
     const zeroAddress = '0x0000000000000000000000000000000000000000'
 
     // Step 1: createJob
-    alert('Step 1 of 4: Creating job on Arc...')
+    showToast('Step 1 of 4 · Creating job on Arc…')
     const { createWalletClient, custom, createPublicClient, http, decodeEventLog } = await import('viem')
     const { arcTestnet } = await import('../../lib/arc')
 
@@ -1352,7 +1354,7 @@ export function Marketplace() {
     })
 
     // Wait for receipt and extract jobId from event
-    alert('Waiting for confirmation...')
+    showToast('Confirming transaction on Arc…')
     const publicClient = createPublicClient({
       chain: arcTestnet,
       transport: http('https://rpc.testnet.arc.network'),
@@ -1383,12 +1385,12 @@ export function Marketplace() {
     }
 
     if (jobId === BigInt(0)) {
-      alert('Could not get job ID from transaction. Please try again.')
+      showToast('Could not get job ID. Please try again.', 'error')
       return
     }
 
     // Agent wallet sets budget (provider must call setBudget)
-    alert('Step 2 of 4: Agent setting job budget...')
+    showToast('Step 2 of 4 · Agent setting budget…')
     const setBudgetRes = await fetch('/api/set-budget', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1400,7 +1402,7 @@ export function Marketplace() {
     }
 
     // Step 2: approve USDC
-    alert('Step 3 of 4: Approving USDC spend...')
+    showToast('Step 3 of 4 · Approving USDC spend…')
     await walletClient.writeContract({
       address: USDC_ADDRESS as `0x${string}`,
       abi: USDC_ABI,
@@ -1410,7 +1412,7 @@ export function Marketplace() {
     })
 
     // Step 3: fund escrow with real jobId
-    alert('Step 4 of 4: Locking USDC in escrow...')
+    showToast('Step 4 of 4 · Locking USDC in escrow…')
     await walletClient.writeContract({
       address: AGENTIC_COMMERCE_ADDRESS as `0x${string}`,
       abi: AGENTIC_COMMERCE_ABI,
@@ -1470,11 +1472,11 @@ export function Marketplace() {
     const errorMessage = error?.message || error?.shortMessage || 'Unknown error'
 
     if (errorMessage.includes('rejected') || errorMessage.includes('denied')) {
-      alert('Transaction cancelled.')
+      showToast('Transaction cancelled.', 'error')
     } else if (errorMessage.includes('insufficient') || errorMessage.includes('funds')) {
-      alert('Insufficient funds. Get free testnet USDC at faucet.testnet.arc.network')
+      showToast('Insufficient funds. Get testnet USDC at faucet.testnet.arc.network', 'error')
     } else {
-      alert(`Transaction failed: ${errorMessage}`)
+      showToast(`Transaction failed: ${errorMessage}`, 'error')
     }
   }
 }
@@ -1484,6 +1486,13 @@ export function Marketplace() {
       <style>{CSS}</style>
 
       {/* ── MODALS ── */}
+      {/* Toast notification */}
+      {toast && (
+        <div className="fade-in" style={{position:'fixed',bottom:isMobile?80:24,right:24,zIndex:300,background:toast.type==='error'?'#1c0808':toast.type==='success'?'#061a10':'#0d0f1a',border:`1px solid ${toast.type==='error'?'#3a1010':toast.type==='success'?'#0f3a20':'#1e2238'}`,borderRadius:12,padding:'12px 16px',display:'flex',alignItems:'center',gap:10,maxWidth:320,boxShadow:'0 8px 32px rgba(0,0,0,0.4)'}}>
+          <div style={{width:8,height:8,borderRadius:'50%',background:toast.type==='error'?'#ef4444':toast.type==='success'?'#22c55e':'#6b7fff',flexShrink:0,animation:toast.type==='info'?'pulse 1.5s ease infinite':'none'}}/>
+          <span style={{fontSize:13,color:toast.type==='error'?'#f87171':toast.type==='success'?'#4ade80':'#e6e8f0',fontFamily:"'DM Sans', sans-serif",lineHeight:1.4}}>{toast.message}</span>
+        </div>
+      )}
       {anyModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.78)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16}}>
         {feedbackJob&&<FeedbackModal job={feedbackJob} onClose={()=>setFeedbackJob(null)} onSubmit={handleFeedbackSubmit}/>}
         {applyJob&&myAgent&&<SubmitDeliverableModal job={applyJob} myAgent={myAgent} onClose={()=>setApplyJob(null)} onSubmit={handleApplySubmit}/>}
