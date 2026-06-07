@@ -41,7 +41,25 @@ const AGENTIC_COMMERCE_ABI = [
 
 export async function POST(req: NextRequest) {
   try {
-    const { job } = await req.json()
+    const body = await req.json()
+
+    // Handle arbitration requests
+    if (body.type === 'arbitrate') {
+      const { job, deliverableContent } = body
+      const message = await anthropic.messages.create({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: `You are an impartial AI arbitrator for CONACT.\n\nJOB TITLE: ${job.title}\nJOB CATEGORY: ${job.category}\nJOB DESCRIPTION: ${job.description}\nBUDGET: ${job.budget} USDC\n\nDELIVERABLE CONTENT:\n${deliverableContent || 'Not available'}\n\nRespond with ONLY this JSON:\n{"verdict":"APPROVE or REJECT","score":0-100,"reasoning":"2-3 sentences","strengths":["s1"],"weaknesses":["w1"]}`
+        }],
+      })
+      const text = (message.content[0] as any).text
+      const clean = text.replace(/\`\`\`json|\`\`\`/g, '').trim()
+      return NextResponse.json({ success: true, ...JSON.parse(clean) })
+    }
+
+    const { job } = body
 
     console.log('Agent executing job:', job.id, job.title)
 
@@ -172,4 +190,51 @@ Requirements:
 ${job.requirements ? JSON.stringify(job.requirements) : 'Produce high quality content that matches the job description.'}
 
 Please produce the complete deliverable now. Be thorough, professional and match the exact requirements specified. Format your response clearly with appropriate headers and structure.`
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const { job, deliverableContent } = await req.json()
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `You are an impartial AI arbitrator for CONACT, a content marketplace.
+
+JOB TITLE: ${job.title}
+JOB CATEGORY: ${job.category}
+JOB DESCRIPTION: ${job.description}
+BUDGET: ${job.budget} USDC
+
+DELIVERABLE CONTENT:
+${deliverableContent || 'Content not available - evaluate based on job description only'}
+
+Evaluate the deliverable against the job requirements and respond with ONLY a JSON object:
+{
+  "verdict": "APPROVE" or "REJECT",
+  "score": <number 0-100>,
+  "reasoning": "<2-3 sentence explanation>",
+  "strengths": ["<strength 1>", "<strength 2>"],
+  "weaknesses": ["<weakness 1>"] or []
+}
+
+Be objective and fair. Approve if the deliverable broadly meets requirements.`
+      }],
+    })
+
+    const text = (message.content[0] as any).text
+    const clean = text.replace(/```json|```/g, '').trim()
+    const result = JSON.parse(clean)
+
+    return NextResponse.json({ success: true, ...result })
+
+  } catch (err) {
+    console.error('Arbitration failed:', err)
+    return NextResponse.json(
+      { success: false, error: String(err) },
+      { status: 500 }
+    )
+  }
 }

@@ -639,6 +639,32 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
   const [sel, setSel] = useState(queue[0]||null);
   const [jobContent, setJobContent] = useState<any>(null)
   const [loadingContent, setLoadingContent] = useState(false)
+  const [arbitrating, setArbitrating] = useState(false)
+  const [arbitrationResult, setArbitrationResult] = useState<any>(null)
+
+  const handleArbitration = async () => {
+    if (!sel) return
+    setArbitrating(true)
+    setArbitrationResult(null)
+
+    try {
+      const res = await fetch('/api/agent-execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'arbitrate',
+          job: sel,
+          deliverableContent: jobContent?.content || null,
+        }),
+      })
+      const data = await res.json()
+      setArbitrationResult(data)
+    } catch (err) {
+      console.error('Arbitration error:', err)
+    } finally {
+      setArbitrating(false)
+    }
+  }
 
   useEffect(() => {
     if (!sel) { setJobContent(null); return }
@@ -797,12 +823,65 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                 <div style={{fontSize:12,color:isComp?"#2a5a2a":"#5a2020",lineHeight:1.6}}>This job has been {isComp?"completed and settled on-chain":"rejected with reason stored on-chain"}.</div>
               </div>}
 
-              {/* Actions */}
-              {!resolved&&<div style={{display:"flex",gap:10}}>
-                <button className="btn-danger" onClick={()=>onReject(sel)} style={{padding:"11px 20px",borderRadius:9,background:"#1c0808",color:"#ef4444",border:"1px solid #3a1010",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Reject</button>
-                <button className="btn-complete" onClick={()=>onComplete(sel)} style={{flex:1,padding:"12px",borderRadius:9,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>
-                  Approve &amp; Release {sel.budget} USDC →
-                </button>
+              {!resolved&&<div>
+                {/* Arbitration result */}
+                {arbitrationResult && (
+                  <div className="fade-in" style={{
+                    background: arbitrationResult.verdict==='APPROVE' ? '#061a10' : '#1c0808',
+                    border: `1px solid ${arbitrationResult.verdict==='APPROVE' ? '#0f3a20' : '#3a1010'}`,
+                    borderRadius: 12,
+                    padding: '14px 16px',
+                    marginBottom: 14,
+                  }}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <div style={{width:8,height:8,borderRadius:'50%',background:arbitrationResult.verdict==='APPROVE'?'#22c55e':'#ef4444'}}/>
+                        <span style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:arbitrationResult.verdict==='APPROVE'?'#22c55e':'#ef4444'}}>
+                          AI Verdict: {arbitrationResult.verdict}
+                        </span>
+                      </div>
+                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:arbitrationResult.verdict==='APPROVE'?'#22c55e':'#ef4444'}}>
+                        {arbitrationResult.score}/100
+                      </span>
+                    </div>
+                    <p style={{fontSize:13,color:'#a0a3b8',lineHeight:1.7,marginBottom:10}}>
+                      {arbitrationResult.reasoning}
+                    </p>
+                    {arbitrationResult.strengths?.length > 0 && (
+                      <div style={{marginBottom:8}}>
+                        <div style={{fontSize:10.5,color:'#22c55e',fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>STRENGTHS</div>
+                        {arbitrationResult.strengths.map((s:string,i:number)=>(
+                          <div key={i} style={{fontSize:12,color:'#4a7a4a',marginBottom:2}}>✓ {s}</div>
+                        ))}
+                      </div>
+                    )}
+                    {arbitrationResult.weaknesses?.length > 0 && (
+                      <div style={{marginBottom:10}}>
+                        <div style={{fontSize:10.5,color:'#ef4444',fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>WEAKNESSES</div>
+                        {arbitrationResult.weaknesses.map((w:string,i:number)=>(
+                          <div key={i} style={{fontSize:12,color:'#7a4a4a',marginBottom:2}}>✗ {w}</div>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{fontSize:11.5,color:'#5c5f7a',borderTop:`1px solid ${arbitrationResult.verdict==='APPROVE'?'#0f3a20':'#3a1010'}`,paddingTop:10,marginTop:4}}>
+                      AI arbitration verdict is advisory — you can still override below.
+                    </div>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div style={{display:'flex',gap:10}}>
+                  <button className="btn-danger" onClick={()=>onReject(sel)} style={{padding:"11px 20px",borderRadius:9,background:"#1c0808",color:"#ef4444",border:"1px solid #3a1010",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Reject</button>
+                  <button 
+                    onClick={handleArbitration}
+                    disabled={arbitrating}
+                    style={{padding:"11px 16px",borderRadius:9,background:"#0a0a1a",color:"#a78bfa",border:"1px solid #2a1a5a",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:arbitrating?"not-allowed":"pointer",opacity:arbitrating?0.6:1,transition:"all .2s"}}>
+                    {arbitrating ? '⟳ Arbitrating…' : '⚖ AI Arbitration'}
+                  </button>
+                  <button className="btn-complete" onClick={()=>onComplete(sel)} style={{flex:1,padding:"12px",borderRadius:9,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>
+                    Approve &amp; Release {sel.budget} USDC →
+                  </button>
+                </div>
               </div>}
             </div>
           );
