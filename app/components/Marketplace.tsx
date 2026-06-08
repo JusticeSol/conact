@@ -1501,6 +1501,10 @@ export function Marketplace() {
     })
 
     // Save job to Supabase
+    if (!createHash) {
+      console.error('createJob transaction hash missing - not saving to Supabase')
+      return
+    }
     const savedJob = await saveJob({
       chain_job_id: jobId.toString(),
       title: form.title,
