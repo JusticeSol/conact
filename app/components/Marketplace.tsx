@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react" 
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useWriteContract, useAccount, WagmiProvider } from 'wagmi'
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
+import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { wagmiConfig } from '../../lib/arc'
 import '@rainbow-me/rainbowkit/styles.css'
@@ -205,20 +205,20 @@ const USDC_ABI = [
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-const cc = (c: string): string => ({ Writing:"#6b7fff", Curation:"#22c55e", Research:"#f59e0b", Analysis:"#d946ef", "Social Copy":"#38bdf8", Summarisation:"#fb923c", Translation:"#a78bfa", SEO:"#34d399" } as Record<string, string>)[c] || "#7b7e96";
-const cb = (c: string): string => ({ Writing:"#12153a", Curation:"#061a10", Research:"#1c1408", Analysis:"#1e0829", "Social Copy":"#041c2a", Summarisation:"#1c0c04", Translation:"#160e30", SEO:"#061c14" } as Record<string, string>)[c] || "#161822";
-const sc = (s) => s >= 95 ? "#4ade80" : s >= 88 ? "#22c55e" : s >= 70 ? "#f59e0b" : s > 0 ? "#ef4444" : "#3a3d58";
+const cc = (c: string): string => ({ Writing:"#1A1712", Curation:"#5A8A5A", Research:"#B07A2A", Analysis:"#8A5A7A", "Social Copy":"#5A7A6A", Summarisation:"#B07A2A", Translation:"#7A6A9A", SEO:"#5A8A5A" } as Record<string, string>)[c] || "#6A5E4A";
+const cb = (c: string): string => ({ Writing:"#EDE8DC", Curation:"#E6EEE3", Research:"#F5EBD8", Analysis:"#EFE4EC", "Social Copy":"#E4EDE6", Summarisation:"#F5EBD8", Translation:"#EAE6F0", SEO:"#E6EEE3" } as Record<string, string>)[c] || "#EDE8DC";
+const sc = (s) => s >= 95 ? "#5A8A5A" : s >= 88 ? "#5A8A5A" : s >= 70 ? "#B07A2A" : s > 0 ? "#A85440" : "#9A8A72";
 const trim = (a) => a ? `${a.slice(0,6)}…${a.slice(-4)}` : '0x0000…0000';
 const statusSty = (s) => ({
-  open:          { color:"#22c55e",  bg:"#061a10" },
-  "in-progress": { color:"#f59e0b",  bg:"#1c1408" },
-  submitted:     { color:"#38bdf8",  bg:"#041c2a" },
-  funded:        { color:"#a78bfa",  bg:"#160e30" },
-  completed:     { color:"#4a4d66",  bg:"#0d0f1a" },
-  rejected:      { color:"#ef4444",  bg:"#1c0808" },
-})[s] || { color:"#7b7e96", bg:"#161822" };
+  open:          { color:"#5A8A5A",  bg:"#E6EEE3" },
+  "in-progress": { color:"#B07A2A",  bg:"#F5EBD8" },
+  submitted:     { color:"#5A7A6A",  bg:"#E4EDE6" },
+  funded:        { color:"#7A6A9A",  bg:"#EAE6F0" },
+  completed:     { color:"#9A8A72",  bg:"#FDFBF6" },
+  rejected:      { color:"#A85440",  bg:"#F5E4E0" },
+})[s] || { color:"#6A5E4A", bg:"#EDE8DC" };
 const statusLabel = (s) => ({ "in-progress":"In Progress", submitted:"Delivered", funded:"Funded", completed:"Completed", rejected:"Rejected" })[s] || (s.charAt(0).toUpperCase()+s.slice(1));
-const scoreColor  = (n) => n >= 80 ? "#22c55e" : n >= 60 ? "#f59e0b" : n >= 40 ? "#f97316" : "#ef4444";
+const scoreColor  = (n) => n >= 80 ? "#5A8A5A" : n >= 60 ? "#B07A2A" : n >= 40 ? "#B07A2A" : "#A85440";
 const randHex = (n) => Array.from({length:n},()=>Math.floor(Math.random()*16).toString(16)).join("");
 const fakeAddr  = () => "0x"+randHex(40);
 const fakeTx    = () => "0x"+randHex(64);
@@ -266,26 +266,26 @@ const isAIEval = (ev) => ev && (ev.toLowerCase().includes("ai") || ev.toLowerCas
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0} body{background:#09090f}
-  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#252838;border-radius:2px}
-  .nav-item{transition:all .12s}.nav-item:hover{background:#13151f!important}.nav-item.active{background:#13151f!important;color:#e6e8f0!important}
-  .job-card{transition:all .12s}.job-card:hover{border-color:#2a2e48!important;background:#101320!important}.job-card.sel{border-color:#3a42a0!important;background:#0e1030!important}
-  .eval-item{transition:all .12s;cursor:pointer}.eval-item:hover{background:#101320!important;border-color:#2a2e48!important}.eval-item.sel{background:#0a1820!important;border-color:#1a4060!important}
-  .agent-card{transition:all .12s}.agent-card:hover{border-color:#2a2e48!important;background:#101320!important}
-  .active-job-card{transition:all .12s}.active-job-card:hover{background:#101320!important;border-color:#2a2e48!important}
-  .cat-btn{transition:all .12s;cursor:pointer;font-family:inherit}.cat-btn:hover{background:#13151f!important;color:#b0b3cc!important}.cat-btn.on{background:#12153a!important;color:#6b7fff!important;border-color:#2a307a!important}
-  .dtype-btn{transition:all .12s;cursor:pointer}.dtype-btn:hover{border-color:#3a3e60!important;background:#13151f!important}.dtype-btn.on{border-color:#3a42a0!important;background:#12153a!important;color:#6b7fff!important}
-  .btn-pri{transition:all .12s}.btn-pri:hover{background:#7b8fff!important}.btn-pri:active{transform:scale(.98)}
-  .btn-sec{transition:all .12s}.btn-sec:hover{background:#13151f!important}
-  .btn-danger{transition:all .12s}.btn-danger:hover{background:#200a0a!important;border-color:#5a1a1a!important;color:#f87171!important}
-  .btn-approve{transition:all .12s}.btn-approve:hover{background:#0a2a14!important;border-color:#22c55e!important}
-  .btn-complete{transition:all .12s}.btn-complete:hover{background:#0d2a0a!important;border-color:#4ade80!important}
-  .btn-submit{transition:all .12s}.btn-submit:hover{background:#0a1a2e!important;border-color:#38bdf8!important;color:#7dd3fc!important}
-  .cap-chip{transition:all .12s;cursor:pointer;user-select:none}.cap-chip:hover{border-color:#3a3e60!important;background:#13151f!important}.cap-chip.sel{border-color:#3a42a0!important;background:#12153a!important}
-  .type-chip{transition:all .12s;cursor:pointer;user-select:none}.type-chip:hover{border-color:#3a3e60!important;background:#13151f!important}.type-chip.sel{border-color:#3a42a0!important;background:#12153a!important;color:#6b7fff!important}
-  input,textarea,select{box-sizing:border-box!important;background:#0d0f1a!important;border:1px solid #1e2238!important;color:#e6e8f0!important;border-radius:8px!important;padding:9px 12px!important;font-family:inherit!important;font-size:14px!important;width:100%!important;outline:none!important;transition:border-color .12s!important}
-  input:focus,textarea:focus,select:focus{border-color:#4a54c0!important} textarea{resize:vertical!important;line-height:1.6!important} select option{background:#0d0f1a}
-  input[type=range]{padding:0!important;height:6px!important;background:transparent!important;border:none!important;accent-color:#6b7fff}
+  *{box-sizing:border-box;margin:0;padding:0} body{background:#F5F0E8}
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#C8BFA8;border-radius:2px}
+  .nav-item{transition:all .12s}.nav-item:hover{background:#EDE8DC!important}.nav-item.active{background:#EDE8DC!important;color:#1A1712!important}
+  .job-card{transition:all .12s}.job-card:hover{background:#EDE8DC!important}.job-card.sel{background:#E4E0D2!important}
+  .eval-item{transition:all .12s;cursor:pointer}.eval-item:hover{background:#EDE8DC!important;border-color:#A8977A!important}.eval-item.sel{background:#E9EDE6!important;border-color:#A8B8A8!important}
+  .agent-card{transition:all .12s}.agent-card:hover{border-color:#A8977A!important;background:#EDE8DC!important}
+  .active-job-card{transition:all .12s}.active-job-card:hover{background:#EDE8DC!important;border-color:#A8977A!important}
+  .cat-btn{transition:all .12s;cursor:pointer;font-family:inherit}.cat-btn:hover{background:#EDE8DC!important;color:#b0b3cc!important}.cat-btn.on{background:#EDE8DC!important;color:#1A1712!important;border-color:#A8977A!important}
+  .dtype-btn{transition:all .12s;cursor:pointer}.dtype-btn:hover{border-color:#A8977A!important;background:#EDE8DC!important}.dtype-btn.on{border-color:#7A6A52!important;background:#EDE8DC!important;color:#1A1712!important}
+  .btn-pri{transition:all .12s}.btn-pri:hover{background:#3A3228!important}.btn-pri:active{transform:scale(.98)}
+  .btn-sec{transition:all .12s}.btn-sec:hover{background:#EDE8DC!important}
+  .btn-danger{transition:all .12s}.btn-danger:hover{background:#F0DDD8!important;border-color:#C89A88!important;color:#A85440!important}
+  .btn-approve{transition:all .12s}.btn-approve:hover{background:#DCE8D8!important;border-color:#5A8A5A!important}
+  .btn-complete{transition:all .12s}.btn-complete:hover{background:#DCE8D8!important;border-color:#5A8A5A!important}
+  .btn-submit{transition:all .12s}.btn-submit:hover{background:#DDE8E2!important;border-color:#5A7A6A!important;color:#5A7A6A!important}
+  .cap-chip{transition:all .12s;cursor:pointer;user-select:none}.cap-chip:hover{border-color:#A8977A!important;background:#EDE8DC!important}.cap-chip.sel{border-color:#7A6A52!important;background:#EDE8DC!important}
+  .type-chip{transition:all .12s;cursor:pointer;user-select:none}.type-chip:hover{border-color:#A8977A!important;background:#EDE8DC!important}.type-chip.sel{border-color:#7A6A52!important;background:#EDE8DC!important;color:#1A1712!important}
+  input,textarea,select{box-sizing:border-box!important;background:#FDFBF6!important;border:1px solid #C8BFA8!important;color:#1A1712!important;border-radius:8px!important;padding:9px 12px!important;font-family:inherit!important;font-size:14px!important;width:100%!important;outline:none!important;transition:border-color .12s!important}
+  input:focus,textarea:focus,select:focus{border-color:#7A6A52!important} textarea{resize:vertical!important;line-height:1.6!important} select option{background:#FDFBF6}
+  input[type=range]{padding:0!important;height:6px!important;background:transparent!important;border:none!important;accent-color:#1A1712}
   @keyframes spin{to{transform:rotate(360deg)}}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -298,18 +298,18 @@ const CSS = `
 // ─── SHARED ───────────────────────────────────────────────────────────────────
 
 function StepDots({ step, total }) {
-  return <div style={{display:"flex",gap:5,alignItems:"center"}}>{Array.from({length:total},(_,i)=><div key={i} style={{width:i+1===step?18:6,height:6,borderRadius:3,background:i+1<step?"#22c55e":i+1===step?"#6b7fff":"#1e2238",transition:"all .25s"}}/>)}</div>;
+  return <div style={{display:"flex",gap:5,alignItems:"center"}}>{Array.from({length:total},(_,i)=><div key={i} style={{width:i+1===step?18:6,height:6,borderRadius:3,background:i+1<step?"#5A8A5A":i+1===step?"#1A1712":"#C8BFA8",transition:"all .25s"}}/>)}</div>;
 }
 function TxProgress({ label, contractAddr, steps }) {
-  return <div style={{background:"#0d0f1a",border:"1px solid #1e2238",borderRadius:14,padding:"26px 22px",textAlign:"center"}}>
-    <div className="spin" style={{width:30,height:30,borderRadius:"50%",border:"2px solid #1e2238",borderTopColor:"#6b7fff",margin:"0 auto 13px"}}/>
-    <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:14.5,color:"#e6e8f0",marginBottom:3}}>{label}</div>
-    <div style={{fontSize:11.5,color:"#5c5f7a",marginBottom:16}}>1 transaction · ~0.006 USDC fee</div>
-    {steps.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:9,padding:"6px 0",borderBottom:"1px solid #0f1020",textAlign:"left"}}>
-      {s.done?<span style={{color:"#22c55e",fontSize:11,flexShrink:0,width:14}}>✓</span>:<div className="spin" style={{width:10,height:10,borderRadius:"50%",border:"1.5px solid #1e2238",borderTopColor:"#6b7fff",flexShrink:0}}/>}
-      <span className={!s.done?"pulse":""} style={{fontSize:12.5,color:s.done?"#5c5f7a":"#a0a3b8"}}>{s.label}</span>
+  return <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:14,padding:"26px 22px",textAlign:"center"}}>
+    <div className="spin" style={{width:30,height:30,borderRadius:"50%",border:"2px solid #C8BFA8",borderTopColor:"#1A1712",margin:"0 auto 13px"}}/>
+    <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:14.5,color:"#1A1712",marginBottom:3}}>{label}</div>
+    <div style={{fontSize:11.5,color:"#7A6A52",marginBottom:16}}>1 transaction · ~0.006 USDC fee</div>
+    {steps.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:9,padding:"6px 0",borderBottom:"1px solid #D8D0C0",textAlign:"left"}}>
+      {s.done?<span style={{color:"#5A8A5A",fontSize:11,flexShrink:0,width:14}}>✓</span>:<div className="spin" style={{width:10,height:10,borderRadius:"50%",border:"1.5px solid #C8BFA8",borderTopColor:"#1A1712",flexShrink:0}}/>}
+      <span className={!s.done?"pulse":""} style={{fontSize:12.5,color:s.done?"#7A6A52":"#4A4133"}}>{s.label}</span>
     </div>)}
-    <div style={{marginTop:14,fontSize:10,color:"#2a2d48",fontFamily:"'JetBrains Mono',monospace"}}>{contractAddr}</div>
+    <div style={{marginTop:14,fontSize:10,color:"#B5AB94",fontFamily:"'IBM Plex Mono',monospace"}}>{contractAddr}</div>
   </div>;
 }
 
@@ -325,19 +325,19 @@ function AIEvalPanel({ job, delivHash }) {
   }, []);
 
   const statusIcon = (s) => s==="pass"?"✓":s==="partial"?"◐":"✗";
-  const statusClr  = (s) => s==="pass"?"#22c55e":s==="partial"?"#f59e0b":"#ef4444";
-  const statusBg   = (s) => s==="pass"?"#061a10":s==="partial"?"#1c1408":"#1c0808";
+  const statusClr  = (s) => s==="pass"?"#5A8A5A":s==="partial"?"#B07A2A":"#A85440";
+  const statusBg   = (s) => s==="pass"?"#E6EEE3":s==="partial"?"#F5EBD8":"#F5E4E0";
 
   return (
     <div style={{background:"#040e14",border:"1px solid #0d2a40",borderRadius:12,padding:"14px 16px"}}>
       {/* Header */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <div style={{width:7,height:7,borderRadius:"50%",background:loading?"#f59e0b":"#22c55e"}}/>
+          <div style={{width:7,height:7,borderRadius:"50%",background:loading?"#B07A2A":"#5A8A5A"}}/>
           <span style={{fontSize:11.5,color:"#5a8ab0",fontWeight:500}}>AI Evaluation</span>
-          <span style={{fontSize:10,background:"#061a2a",color:"#38bdf8",padding:"1px 6px",borderRadius:3,fontFamily:"'JetBrains Mono',monospace",border:"1px solid #0d3050"}}>claude-sonnet-4-20250514</span>
+          <span style={{fontSize:10,background:"#E4EDE6",color:"#5A7A6A",padding:"1px 6px",borderRadius:3,fontFamily:"'IBM Plex Mono',monospace",border:"1px solid #B8C8BC"}}>claude-sonnet-4-20250514</span>
         </div>
-        {!loading&&result&&<span style={{fontSize:10.5,color:"#3a5a7a"}}>{result.time}s</span>}
+        {!loading&&result&&<span style={{fontSize:10.5,color:"#7A6A52"}}>{result.time}s</span>}
       </div>
 
       {loading ? (
@@ -354,8 +354,8 @@ function AIEvalPanel({ job, delivHash }) {
                 <div style={{width:20,height:20,borderRadius:4,background:statusBg(c.status),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                   <span style={{color:statusClr(c.status),fontSize:11,fontWeight:700}}>{statusIcon(c.status)}</span>
                 </div>
-                <span style={{flex:1,fontSize:12.5,color:"#7090b0",lineHeight:1.4}}>{c.req}</span>
-                <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:statusClr(c.status),flexShrink:0}}>{c.score}%</span>
+                <span style={{flex:1,fontSize:12.5,color:"#4A4133",lineHeight:1.4}}>{c.req}</span>
+                <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11,color:statusClr(c.status),flexShrink:0}}>{c.score}%</span>
               </div>
             ))}
           </div>
@@ -363,15 +363,15 @@ function AIEvalPanel({ job, delivHash }) {
           {/* Overall */}
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#060e18",borderRadius:8,padding:"10px 12px"}}>
             <div>
-              <div style={{fontSize:10,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:3}}>OVERALL SCORE</div>
+              <div style={{fontSize:10,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:3}}>OVERALL SCORE</div>
               <div style={{display:"flex",alignItems:"baseline",gap:4}}>
-                <span style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:22,color:scoreColor(result.score),lineHeight:1}}>{result.score}</span>
-                <span style={{fontSize:11,color:"#3a5a7a"}}>/100 · {result.confidence}% confidence</span>
+                <span style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:22,color:scoreColor(result.score),lineHeight:1}}>{result.score}</span>
+                <span style={{fontSize:11,color:"#7A6A52"}}>/100 · {result.confidence}% confidence</span>
               </div>
             </div>
             <div style={{textAlign:"right"}}>
-              <div style={{fontSize:10,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>RECOMMENDATION</div>
-              <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:result.recommend==="APPROVE"?"#22c55e":"#ef4444",background:result.recommend==="APPROVE"?"#061a10":"#1c0808",border:`1px solid ${result.recommend==="APPROVE"?"#0f3a20":"#3a0808"}`,padding:"4px 10px",borderRadius:5}}>
+              <div style={{fontSize:10,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:4}}>RECOMMENDATION</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:14,color:result.recommend==="APPROVE"?"#5A8A5A":"#A85440",background:result.recommend==="APPROVE"?"#E6EEE3":"#F5E4E0",border:`1px solid ${result.recommend==="APPROVE"?"#B8CDB4":"#3a0808"}`,padding:"4px 10px",borderRadius:5}}>
                 {result.recommend}
               </div>
             </div>
@@ -434,29 +434,29 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
 };
 
   if (step==="done") return (
-    <div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:460,maxWidth:"94vw"}}>
+    <div className="slide-up" style={{background:"#F5F0E8",border:"1px solid #C8BFA8",borderRadius:16,padding:26,width:460,maxWidth:"94vw"}}>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
-        <div style={{width:26,height:26,borderRadius:"50%",background:"#061a10",border:"1px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",color:"#22c55e",fontSize:13}}>✓</div>
-        <div style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#22c55e"}}>Job completed · USDC released</div>
+        <div style={{width:26,height:26,borderRadius:"50%",background:"#E6EEE3",border:"1px solid #5A8A5A",display:"flex",alignItems:"center",justifyContent:"center",color:"#5A8A5A",fontSize:13}}>✓</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:"#5A8A5A"}}>Job completed · USDC released</div>
       </div>
-      <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"12px 14px",marginBottom:13}}>
+      <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:10,padding:"12px 14px",marginBottom:13}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-          <span style={{fontSize:13,color:"#e6e8f0",fontWeight:500}}>{job.title}</span>
-          <span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:"#0d0f1a",color:"#4a4d66",border:"1px solid #1a1e30"}}>Completed</span>
+          <span style={{fontSize:13,color:"#1A1712",fontWeight:500}}>{job.title}</span>
+          <span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:"#FDFBF6",color:"#9A8A72",border:"1px solid #C8BFA8"}}>Completed</span>
         </div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:12,color:"#5c5f7a"}}>Released to {job.provider?.name||"agent"}</span>
-          <span style={{fontFamily:"'JetBrains Mono',monospace",color:"#22c55e",fontSize:14,fontWeight:600}}>{job.budget} USDC</span>
+          <span style={{fontSize:12,color:"#7A6A52"}}>Released to {job.provider?.name||"agent"}</span>
+          <span style={{fontFamily:"'IBM Plex Mono',monospace",color:"#5A8A5A",fontSize:14,fontWeight:600}}>{job.budget} USDC</span>
         </div>
       </div>
-      <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"10px 12px",marginBottom:13}}>
-        <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>TRANSACTION</div>
-        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#5a8abf",wordBreak:"break-all"}}>{txHash}</div>
+      <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px",marginBottom:13}}>
+        <div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:4}}>TRANSACTION</div>
+        <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10.5,color:"#6A5E4A",wordBreak:"break-all"}}>{txHash}</div>
         <div style={{fontSize:11,color:"#2a4a6a",marginTop:3}}>AgenticCommerce · complete(uint256,bytes32,bytes)</div>
       </div>
       <div style={{display:"flex",gap:10}}>
-        <button className="btn-sec" onClick={()=>onClose(null)} style={{flex:1,padding:"11px",borderRadius:9,background:"transparent",color:"#6b6e88",border:"1px solid #1e2238",fontSize:13,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Done</button>
-        <button className="btn-approve" onClick={()=>onClose(job)} style={{flex:1,padding:"11px",borderRadius:9,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>
+        <button className="btn-sec" onClick={()=>onClose(null)} style={{flex:1,padding:"11px",borderRadius:9,background:"transparent",color:"#7A6A52",border:"1px solid #C8BFA8",fontSize:13,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>Done</button>
+        <button className="btn-approve" onClick={()=>onClose(job)} style={{flex:1,padding:"11px",borderRadius:9,background:"#E6EEE3",color:"#5A8A5A",border:"1px solid #B8CDB4",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>
           Rate {job.provider?.name||"Agent"} →
         </button>
       </div>
@@ -466,26 +466,26 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
   if (step==="submitting") return <div style={{width:440,maxWidth:"94vw"}}><TxProgress label="Completing job · releasing USDC…" contractAddr="AgenticCommerce · 0x0747EEf0…e4583" steps={[{label:"Calling complete() on AgenticCommerce",done:true},{label:"Verifying evaluator wallet",done:false},{label:"Releasing USDC to provider",done:false}]}/></div>;
 
   return (
-    <div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:460,maxWidth:"94vw"}}>
+    <div className="slide-up" style={{background:"#F5F0E8",border:"1px solid #C8BFA8",borderRadius:16,padding:26,width:460,maxWidth:"94vw"}}>
       <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18}}>
         <div>
-          <div style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#fff",marginBottom:3}}>Approve &amp; release escrow</div>
-          <div style={{fontSize:12,color:"#5c5f7a"}}>{job.title.slice(0,46)}{job.title.length>46?"…":""}</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:"#1A1712",marginBottom:3}}>Approve &amp; release escrow</div>
+          <div style={{fontSize:12,color:"#7A6A52"}}>{job.title.slice(0,46)}{job.title.length>46?"…":""}</div>
         </div>
-        <button onClick={()=>onClose(null)} style={{background:"none",border:"none",color:"#4a4d66",cursor:"pointer",fontSize:20,lineHeight:1,padding:0,flexShrink:0}}>×</button>
+        <button onClick={()=>onClose(null)} style={{background:"none",border:"none",color:"#9A8A72",cursor:"pointer",fontSize:20,lineHeight:1,padding:0,flexShrink:0}}>×</button>
       </div>
 
       {/* Deliverable reference */}
-      {deliv&&<div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:10,padding:"11px 13px",marginBottom:14}}>
-        <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:5}}>SUBMITTED DELIVERABLE</div>
-        <div style={{fontSize:12,color:"#7090b0",marginBottom:6,wordBreak:"break-all"}}>{deliv.value}</div>
+      {deliv&&<div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:10,padding:"11px 13px",marginBottom:14}}>
+        <div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:5}}>SUBMITTED DELIVERABLE</div>
+        <div style={{fontSize:12,color:"#4A4133",marginBottom:6,wordBreak:"break-all"}}>{deliv.value}</div>
         <a 
       href={deliv.value.startsWith('ipfs://') 
         ? `https://gateway.pinata.cloud/ipfs/${deliv.value.replace('ipfs://', '')}` 
         : deliv.value}
       target="_blank"
       rel="noopener noreferrer"
-      style={{fontSize:12,color:"#38bdf8",marginBottom:6,wordBreak:"break-all",display:"block",textDecoration:"underline"}}
+      style={{fontSize:12,color:"#5A7A6A",marginBottom:6,wordBreak:"break-all",display:"block",textDecoration:"underline"}}
     >
       {deliv.value}
     </a>
@@ -493,29 +493,29 @@ function CompleteJobModal({ job, deliverableMap, onClose, onCompleted }) {
 
       {/* USDC release */}
       <div style={{background:"#0a1a0a",border:"1px solid #1a3a1a",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
-        <div style={{fontSize:9.5,color:"#2a5a2a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:6}}>ESCROW RELEASE</div>
+        <div style={{fontSize:9.5,color:"#2a5a2a",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:6}}>ESCROW RELEASE</div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{fontSize:13,color:"#4a7a4a"}}>To {job.provider?.name||"provider"}</span>
-          <span style={{fontFamily:"'JetBrains Mono',monospace",color:"#22c55e",fontSize:16,fontWeight:700}}>{job.budget} USDC</span>
+          <span style={{fontFamily:"'IBM Plex Mono',monospace",color:"#5A8A5A",fontSize:16,fontWeight:700}}>{job.budget} USDC</span>
         </div>
         <div style={{fontSize:11,color:"#2a5a2a",marginTop:4}}>Released from escrow on Arc · immediate settlement</div>
       </div>
 
       {/* Optional note */}
       <div style={{marginBottom:14}}>
-        <label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:5}}>Approval note <span style={{color:"#3a3d58"}}>(optional · stored as reasonHash on-chain)</span></label>
+        <label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:5}}>Approval note <span style={{color:"#9A8A72"}}>(optional · stored as reasonHash on-chain)</span></label>
         <input value={note} onChange={e=>setNote(e.target.value)} placeholder="e.g. Excellent quality, delivered on time"/>
       </div>
 
       {/* Tx preview */}
-      <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"10px 12px",marginBottom:16}}>
-        <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:6}}>TRANSACTION PREVIEW</div>
-        {[{l:"Contract",v:"AgenticCommerce (ERC-8183)"},{l:"Function",v:"complete(uint256,bytes32,bytes)"},{l:"Job ID",v:`#${job.id}`},{l:"reasonHash",v:`${reasonHash.slice(0,18)}…`},{l:"Est. fee",v:"~0.006 USDC"}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:"#3a5a7a"}}>{r.l}</span><span style={{fontSize:12,color:"#6b8fb0",fontFamily:"'JetBrains Mono',monospace"}}>{r.v}</span></div>)}
+      <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px",marginBottom:16}}>
+        <div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:6}}>TRANSACTION PREVIEW</div>
+        {[{l:"Contract",v:"AgenticCommerce (ERC-8183)"},{l:"Function",v:"complete(uint256,bytes32,bytes)"},{l:"Job ID",v:`#${job.id}`},{l:"reasonHash",v:`${reasonHash.slice(0,18)}…`},{l:"Est. fee",v:"~0.006 USDC"}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:"#7A6A52"}}>{r.l}</span><span style={{fontSize:12,color:"#6b8fb0",fontFamily:"'IBM Plex Mono',monospace"}}>{r.v}</span></div>)}
       </div>
 
       <div style={{display:"flex",gap:10}}>
-        <button className="btn-sec" onClick={()=>onClose(null)} style={{padding:"11px 16px",borderRadius:9,background:"transparent",color:"#6b6e88",border:"1px solid #1e2238",fontSize:13,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Cancel</button>
-        <button className="btn-complete" onClick={handleComplete} style={{flex:1,padding:"12px",borderRadius:9,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>
+        <button className="btn-sec" onClick={()=>onClose(null)} style={{padding:"11px 16px",borderRadius:9,background:"transparent",color:"#7A6A52",border:"1px solid #C8BFA8",fontSize:13,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>Cancel</button>
+        <button className="btn-complete" onClick={handleComplete} style={{flex:1,padding:"12px",borderRadius:9,background:"#E6EEE3",color:"#5A8A5A",border:"1px solid #B8CDB4",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>
           Approve &amp; Release {job.budget} USDC →
         </button>
       </div>
@@ -570,62 +570,62 @@ function RejectJobModal({ job, onClose, onRejected }) {
 };
 
   if (step==="done") return (
-    <div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
+    <div className="slide-up" style={{background:"#F5F0E8",border:"1px solid #C8BFA8",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
-        <div style={{width:26,height:26,borderRadius:"50%",background:"#1c0808",border:"1px solid #ef4444",display:"flex",alignItems:"center",justifyContent:"center",color:"#ef4444",fontSize:13}}>✗</div>
-        <div style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#ef4444"}}>Job rejected · USDC refunded</div>
+        <div style={{width:26,height:26,borderRadius:"50%",background:"#F5E4E0",border:"1px solid #A85440",display:"flex",alignItems:"center",justifyContent:"center",color:"#A85440",fontSize:13}}>✗</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:"#A85440"}}>Job rejected · USDC refunded</div>
       </div>
-      <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"12px 14px",marginBottom:13}}>
+      <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:10,padding:"12px 14px",marginBottom:13}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:13,color:"#e6e8f0",fontWeight:500}}>{job.title.slice(0,38)}{job.title.length>38?"…":""}</span>
-          <span style={{fontFamily:"'JetBrains Mono',monospace",color:"#ef4444",fontSize:13,fontWeight:600}}>{job.budget} USDC returned</span>
+          <span style={{fontSize:13,color:"#1A1712",fontWeight:500}}>{job.title.slice(0,38)}{job.title.length>38?"…":""}</span>
+          <span style={{fontFamily:"'IBM Plex Mono',monospace",color:"#A85440",fontSize:13,fontWeight:600}}>{job.budget} USDC returned</span>
         </div>
       </div>
-      <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"10px 12px",marginBottom:18}}>
-        <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>TRANSACTION</div>
-        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#5a8abf",wordBreak:"break-all"}}>{txHash}</div>
+      <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px",marginBottom:18}}>
+        <div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:4}}>TRANSACTION</div>
+        <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10.5,color:"#6A5E4A",wordBreak:"break-all"}}>{txHash}</div>
         <div style={{fontSize:11,color:"#2a4a6a",marginTop:3}}>AgenticCommerce · reject(uint256,bytes32,bytes)</div>
       </div>
       <div style={{background:"#100808",border:"1px solid #2a1010",borderRadius:9,padding:"10px 12px",marginBottom:18}}>
-        <div style={{fontSize:11.5,color:"#5a2020",lineHeight:1.6}}>The rejection reason is stored on-chain as a bytes32 hash — an immutable audit trail for both parties. The agent can query it via <span style={{color:"#7a3030",fontFamily:"'JetBrains Mono',monospace"}}>getJob({job.id})</span>.</div>
+        <div style={{fontSize:11.5,color:"#5a2020",lineHeight:1.6}}>The rejection reason is stored on-chain as a bytes32 hash — an immutable audit trail for both parties. The agent can query it via <span style={{color:"#7a3030",fontFamily:"'IBM Plex Mono',monospace"}}>getJob({job.id})</span>.</div>
       </div>
-      <button className="btn-pri" onClick={()=>onClose()} style={{width:"100%",padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Done</button>
+      <button className="btn-pri" onClick={()=>onClose()} style={{width:"100%",padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Done</button>
     </div>
   );
 
   if (step==="submitting") return <div style={{width:420,maxWidth:"94vw"}}><TxProgress label="Rejecting job · refunding USDC…" contractAddr="AgenticCommerce · 0x0747EEf0…e4583" steps={[{label:"Calling reject() on AgenticCommerce",done:true},{label:"Verifying evaluator wallet",done:false},{label:"Refunding USDC to client",done:false}]}/></div>;
 
   return (
-    <div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
+    <div className="slide-up" style={{background:"#F5F0E8",border:"1px solid #C8BFA8",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
       <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18}}>
         <div>
-          <div style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#e84040",marginBottom:3}}>Reject deliverable</div>
-          <div style={{fontSize:12,color:"#5c5f7a"}}>{job.title.slice(0,46)}{job.title.length>46?"…":""}</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:"#e84040",marginBottom:3}}>Reject deliverable</div>
+          <div style={{fontSize:12,color:"#7A6A52"}}>{job.title.slice(0,46)}{job.title.length>46?"…":""}</div>
         </div>
-        <button onClick={()=>onClose()} style={{background:"none",border:"none",color:"#4a4d66",cursor:"pointer",fontSize:20,lineHeight:1,padding:0,flexShrink:0}}>×</button>
+        <button onClick={()=>onClose()} style={{background:"none",border:"none",color:"#9A8A72",cursor:"pointer",fontSize:20,lineHeight:1,padding:0,flexShrink:0}}>×</button>
       </div>
 
       <div style={{background:"#100808",border:"1px solid #2a1010",borderRadius:10,padding:"11px 13px",marginBottom:14}}>
-        <div style={{fontSize:9.5,color:"#7a3030",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>ESCROW REFUND</div>
+        <div style={{fontSize:9.5,color:"#7a3030",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:4}}>ESCROW REFUND</div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{fontSize:13,color:"#b06060"}}>Returned to your wallet</span>
-          <span style={{fontFamily:"'JetBrains Mono',monospace",color:"#ef4444",fontSize:14,fontWeight:600}}>{job.budget} USDC</span>
+          <span style={{fontFamily:"'IBM Plex Mono',monospace",color:"#A85440",fontSize:14,fontWeight:600}}>{job.budget} USDC</span>
         </div>
       </div>
 
       <div style={{marginBottom:14}}>
-        <label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:5}}>Rejection reason <span style={{color:"#ef4444",fontSize:11}}>required</span></label>
+        <label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:5}}>Rejection reason <span style={{color:"#A85440",fontSize:11}}>required</span></label>
         <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Describe why the deliverable does not meet the job requirements…" style={{minHeight:80}}/>
-        <div style={{fontSize:11,color:"#3a3d58",marginTop:5}}>Stored on-chain as: <span style={{fontFamily:"'JetBrains Mono',monospace",color:"#3a5a7a"}}>{reasonHash.slice(0,22)}…</span></div>
+        <div style={{fontSize:11,color:"#9A8A72",marginTop:5}}>Stored on-chain as: <span style={{fontFamily:"'IBM Plex Mono',monospace",color:"#7A6A52"}}>{reasonHash.slice(0,22)}…</span></div>
       </div>
 
-      <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"10px 12px",marginBottom:14}}>
-        {[{l:"Contract",v:"AgenticCommerce (ERC-8183)"},{l:"Function",v:"reject(uint256,bytes32,bytes)"},{l:"Job ID",v:`#${job.id}`},{l:"reasonHash",v:`${reasonHash.slice(0,18)}…`}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:"#3a5a7a"}}>{r.l}</span><span style={{fontSize:12,color:"#6b8fb0",fontFamily:"'JetBrains Mono',monospace"}}>{r.v}</span></div>)}
+      <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px",marginBottom:14}}>
+        {[{l:"Contract",v:"AgenticCommerce (ERC-8183)"},{l:"Function",v:"reject(uint256,bytes32,bytes)"},{l:"Job ID",v:`#${job.id}`},{l:"reasonHash",v:`${reasonHash.slice(0,18)}…`}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:"#7A6A52"}}>{r.l}</span><span style={{fontSize:12,color:"#6b8fb0",fontFamily:"'IBM Plex Mono',monospace"}}>{r.v}</span></div>)}
       </div>
 
       <div style={{display:"flex",gap:10}}>
-        <button className="btn-sec" onClick={()=>onClose()} style={{padding:"11px 16px",borderRadius:9,background:"transparent",color:"#6b6e88",border:"1px solid #1e2238",fontSize:13,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Cancel</button>
-        <button className="btn-danger" disabled={!canSubmit} onClick={handleReject} style={{flex:1,padding:"11px",borderRadius:9,background:"#1c0808",color:"#ef4444",border:"1px solid #3a1010",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:canSubmit?"pointer":"not-allowed",opacity:canSubmit?1:.45}}>
+        <button className="btn-sec" onClick={()=>onClose()} style={{padding:"11px 16px",borderRadius:9,background:"transparent",color:"#7A6A52",border:"1px solid #C8BFA8",fontSize:13,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>Cancel</button>
+        <button className="btn-danger" disabled={!canSubmit} onClick={handleReject} style={{flex:1,padding:"11px",borderRadius:9,background:"#F5E4E0",color:"#A85440",border:"1px solid #D8B8AC",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:canSubmit?"pointer":"not-allowed",opacity:canSubmit?1:.45}}>
           Reject &amp; Refund USDC →
         </button>
       </div>
@@ -679,8 +679,8 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
   }, [sel])
 
   const evalTag = (ev) => isAIEval(ev)
-    ? <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#040e14",color:"#38bdf8",border:"1px solid #0d2a40"}}>AI</span>
-    : <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#0d0f1a",color:"#6b6e88",border:"1px solid #1e2238"}}>Manual</span>;
+    ? <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#040e14",color:"#5A7A6A",border:"1px solid #0d2a40"}}>AI</span>
+    : <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#FDFBF6",color:"#7A6A52",border:"1px solid #C8BFA8"}}>Manual</span>;
 
   const pending = queue.filter(j=>!completedJobs.has(j.id)&&!rejectedJobs.has(j.id));
   const done    = queue.filter(j=>completedJobs.has(j.id)||rejectedJobs.has(j.id));
@@ -690,43 +690,43 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
   return (
     <div style={{display:"flex",flex:1,overflow:"hidden",flexDirection:isMobile?"column":"row"}}>  
       {/* ── Queue panel ── */}
-      <div style={{width:isMobile?"100%":252,maxHeight:isMobile?"40%":"100%",borderRight:"1px solid #14162a",overflow:"auto",padding:"18px 10px",flexShrink:0}}>
+      <div style={{width:isMobile?"100%":252,maxHeight:isMobile?"40%":"100%",borderRight:"1px solid #C8BFA8",overflow:"auto",padding:"18px 10px",flexShrink:0}}>
         <div style={{marginBottom:16,padding:"0 4px"}}>
-          <div style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#fff",marginBottom:2}}>Evaluation Queue</div>
-          <div style={{fontSize:12,color:"#5c5f7a"}}>{pending.length} pending · {done.length} resolved</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:"#1A1712",marginBottom:2}}>Evaluation Queue</div>
+          <div style={{fontSize:12,color:"#7A6A52"}}>{pending.length} pending · {done.length} resolved</div>
         </div>
 
         {pending.length===0&&done.length===0&&(
-          <div style={{textAlign:"center",padding:"32px 12px",color:"#3a3d58",fontSize:13}}>No deliverables awaiting evaluation.</div>
+          <div style={{textAlign:"center",padding:"32px 12px",color:"#9A8A72",fontSize:13}}>No deliverables awaiting evaluation.</div>
         )}
 
-        {pending.length>0&&<div style={{fontSize:10,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:8,padding:"0 4px"}}>PENDING</div>}
+        {pending.length>0&&<div style={{fontSize:10,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:8,padding:"0 4px"}}>PENDING</div>}
         {pending.map(job=>(
           <div key={job.id} className={`eval-item ${sel?.id===job.id?"sel":""}`}
             onClick={()=>setSel(job)}
-            style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:9,padding:"11px 12px",marginBottom:7}}>
+            style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:9,padding:"11px 12px",marginBottom:7}}>
             <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:6,marginBottom:6}}>
-              <div style={{fontFamily:"'Outfit',sans-serif",fontSize:13,fontWeight:600,color:"#e6e8f0",lineHeight:1.3,flex:1}}>{job.title.slice(0,42)}{job.title.length>42?"…":""}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:13,fontWeight:600,color:"#1A1712",lineHeight:1.3,flex:1}}>{job.title.slice(0,42)}{job.title.length>42?"…":""}</div>
               {evalTag(job.evaluator)}
             </div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <span style={{fontSize:11,color:"#5c5f7a"}}>{job.provider?.name||"—"}</span>
-              <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11.5,color:"#2775ca",fontWeight:500}}>{job.budget} USDC</span>
+              <span style={{fontSize:11,color:"#7A6A52"}}>{job.provider?.name||"—"}</span>
+              <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11.5,color:"#7A6A52",fontWeight:500}}>{job.budget} USDC</span>
             </div>
           </div>
         ))}
 
         {done.length>0&&<>
-          <div style={{fontSize:10,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,margin:"14px 0 8px",padding:"0 4px"}}>RESOLVED</div>
+          <div style={{fontSize:10,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,margin:"14px 0 8px",padding:"0 4px"}}>RESOLVED</div>
           {done.map(job=>{
             const isComp=completedJobs.has(job.id);
             return(
               <div key={job.id} className={`eval-item ${sel?.id===job.id?"sel":""}`}
                 onClick={()=>setSel(job)}
-                style={{background:"#080910",border:"1px solid #14162a",borderRadius:9,padding:"10px 12px",marginBottom:6,opacity:.7}}>
+                style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px",marginBottom:6,opacity:.7}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}}>
-                  <div style={{fontFamily:"'Outfit',sans-serif",fontSize:12.5,color:"#6b6e88",flex:1}}>{job.title.slice(0,36)}{job.title.length>36?"…":""}</div>
-                  <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:isComp?"#061a10":"#1c0808",color:isComp?"#22c55e":"#ef4444"}}>{isComp?"Approved":"Rejected"}</span>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontSize:12.5,color:"#7A6A52",flex:1}}>{job.title.slice(0,36)}{job.title.length>36?"…":""}</div>
+                  <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:isComp?"#E6EEE3":"#F5E4E0",color:isComp?"#5A8A5A":"#A85440"}}>{isComp?"Approved":"Rejected"}</span>
                 </div>
               </div>
             );
@@ -737,9 +737,9 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
       {/* ── Workspace ── */}
       <div style={{flex:1,overflow:"auto",padding:"22px 26px"}}>
         {!sel ? (
-          <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",height:"100%",flexDirection:"column",gap:10,color:"#3a3d58"}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",height:"100%",flexDirection:"column",gap:10,color:"#9A8A72"}}>
             <div style={{fontSize:24}}>◎</div>
-            <div style={{fontSize:14,fontFamily:"'Outfit',sans-serif",color:"#5c5f7a"}}>Select a submission to review</div>
+            <div style={{fontSize:14,fontFamily:"'Playfair Display',serif",color:"#7A6A52"}}>Select a submission to review</div>
           </div>
         ) : (()=>{
           const isComp = completedJobs.has(sel.id);
@@ -755,48 +755,48 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
                     <span style={{fontSize:11.5,padding:"2px 8px",borderRadius:5,background:cb(sel.category),color:cc(sel.category),fontWeight:500}}>{sel.category}</span>
                     <span style={{fontSize:11.5,padding:"2px 8px",borderRadius:5,...statusSty("submitted")}}>{resolved?(isComp?"Completed":"Rejected"):"Delivered"}</span>
-                    {isAIEval(sel.evaluator)&&<span style={{fontSize:10.5,padding:"2px 7px",borderRadius:3,background:"#040e14",color:"#38bdf8",border:"1px solid #0d2a40"}}>AI Evaluator</span>}
+                    {isAIEval(sel.evaluator)&&<span style={{fontSize:10.5,padding:"2px 7px",borderRadius:3,background:"#040e14",color:"#5A7A6A",border:"1px solid #0d2a40"}}>AI Evaluator</span>}
                   </div>
-                  <h2 style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#fff",letterSpacing:"-0.4px",lineHeight:1.3}}>{sel.title}</h2>
+                  <h2 style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:18,color:"#1A1712",letterSpacing:"-0.4px",lineHeight:1.3}}>{sel.title}</h2>
                 </div>
                 <div style={{textAlign:"right",flexShrink:0,marginLeft:12}}>
-                  <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:22,color:"#fff",lineHeight:1}}>{sel.budget}</div>
-                  <div style={{fontSize:11,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace"}}>USDC</div>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:22,color:"#1A1712",lineHeight:1}}>{sel.budget}</div>
+                  <div style={{fontSize:11,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace"}}>USDC</div>
                 </div>
               </div>
 
               {/* Agent */}
-              {sel.provider&&<div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"11px 13px",marginBottom:14}}>
-                <div style={{fontSize:9.5,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:7}}>SUBMITTED BY</div>
+              {sel.provider&&<div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:10,padding:"11px 13px",marginBottom:14}}>
+                <div style={{fontSize:9.5,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:7}}>SUBMITTED BY</div>
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{width:30,height:30,borderRadius:7,background:cb(sel.category),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:10,color:cc(sel.category)}}>{sel.provider.name.slice(0,2).toUpperCase()}</div>
+                  <div style={{width:30,height:30,borderRadius:7,background:cb(sel.category),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:10,color:cc(sel.category)}}>{sel.provider.name.slice(0,2).toUpperCase()}</div>
                   <div>
-                    <div style={{fontSize:13,color:"#e6e8f0",fontWeight:500}}>{sel.provider.name}</div>
-                    <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#3a3d58",marginTop:1}}>{trim(sel.provider.address)} · ERC-8004 #{sel.provider.agentId}</div>
+                    <div style={{fontSize:13,color:"#1A1712",fontWeight:500}}>{sel.provider.name}</div>
+                    <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10.5,color:"#9A8A72",marginTop:1}}>{trim(sel.provider.address)} · ERC-8004 #{sel.provider.agentId}</div>
                   </div>
                 </div>
               </div>}
 
               {/* Deliverable */}
-              <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
-                <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:7}}>DELIVERABLE (on-chain)</div>
+              <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+                <div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:7}}>DELIVERABLE (on-chain)</div>
                 {deliv ? <>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
-                    <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#040e14",color:"#38bdf8",border:"1px solid #0d2a40"}}>{deliv.dtype||"ipfs"}</span>
+                    <span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:"#040e14",color:"#5A7A6A",border:"1px solid #0d2a40"}}>{deliv.dtype||"ipfs"}</span>
                     <a 
                       href={deliv.value.startsWith('ipfs://') 
                         ? `https://gateway.pinata.cloud/ipfs/${deliv.value.replace('ipfs://', '')}` 
                         : deliv.value}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{fontSize:isMobile?10:12.5,color:"#38bdf8",wordBreak:"break-all",flex:1,overflowWrap:"anywhere",textDecoration:"underline"}}
+                      style={{fontSize:isMobile?10:12.5,color:"#5A7A6A",wordBreak:"break-all",flex:1,overflowWrap:"anywhere",textDecoration:"underline"}}
                     >
                       {deliv.value}
                     </a>
                   </div>
-                  <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>BYTES32 HASH</div>
-                  <span style={{fontSize:isMobile?10:12.5,color:"#7090b0",wordBreak:"break-all",flex:1,overflowWrap:"anywhere"}}>{deliv.value}</span>
-                </> : <div style={{fontSize:12.5,color:"#3a5a7a"}}>Deliverable reference not available in this session.</div>}
+                  <div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:4}}>BYTES32 HASH</div>
+                  <span style={{fontSize:isMobile?10:12.5,color:"#4A4133",wordBreak:"break-all",flex:1,overflowWrap:"anywhere"}}>{deliv.value}</span>
+                </> : <div style={{fontSize:12.5,color:"#7A6A52"}}>Deliverable reference not available in this session.</div>}
               </div>
 
               {/* AI Evaluation Panel */}
@@ -807,19 +807,19 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
               {/* Content viewer + Manual review notes */}
               {!resolved&&<div>
                 {(loadingContent || jobContent) && <div style={{marginBottom:14}}>
-                  <div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:8}}>GENERATED CONTENT</div>
-                  {loadingContent && <div style={{background:"#080910",border:"1px solid #1a1e30",borderRadius:10,padding:"16px",textAlign:"center"}}><div className="spin" style={{width:20,height:20,borderRadius:"50%",border:"2px solid #1e2238",borderTopColor:"#6b7fff",margin:"0 auto 8px"}}/><div style={{fontSize:12,color:"#5c5f7a"}}>Loading content from IPFS...</div></div>}
-                  {!loadingContent && jobContent && <div style={{background:"#080910",border:"1px solid #1a1e30",borderRadius:10,padding:"16px",maxHeight:320,overflowY:"auto"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{fontSize:11,color:"#4a4d66",fontFamily:"'JetBrains Mono',monospace"}}>{jobContent.agent}</div><a href={delivRef(sel)?.value?.startsWith('ipfs://')?`https://gateway.pinata.cloud/ipfs/${delivRef(sel)?.value?.replace('ipfs://','')}`:'#'} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#38bdf8",textDecoration:"none"}}>View on IPFS ↗</a></div><div style={{fontSize:13,color:"#a0a3b8",lineHeight:1.8,whiteSpace:"pre-wrap",fontFamily:"'DM Sans',sans-serif"}}>{jobContent.content}</div></div>}
+                  <div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:8}}>GENERATED CONTENT</div>
+                  {loadingContent && <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:10,padding:"16px",textAlign:"center"}}><div className="spin" style={{width:20,height:20,borderRadius:"50%",border:"2px solid #C8BFA8",borderTopColor:"#1A1712",margin:"0 auto 8px"}}/><div style={{fontSize:12,color:"#7A6A52"}}>Loading content from IPFS...</div></div>}
+                  {!loadingContent && jobContent && <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:10,padding:"16px",maxHeight:320,overflowY:"auto"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{fontSize:11,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace"}}>{jobContent.agent}</div><a href={delivRef(sel)?.value?.startsWith('ipfs://')?`https://gateway.pinata.cloud/ipfs/${delivRef(sel)?.value?.replace('ipfs://','')}`:'#'} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#5A7A6A",textDecoration:"none"}}>View on IPFS ↗</a></div><div style={{fontSize:13,color:"#4A4133",lineHeight:1.8,whiteSpace:"pre-wrap",fontFamily:"'Inter',sans-serif"}}>{jobContent.content}</div></div>}
                 </div>}
-                <label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:5}}>
+                <label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:5}}>
                   {isAIEval(sel.evaluator)?"Override notes (optional)":"Review notes (optional)"}
                 </label>
                 <textarea placeholder={isAIEval(sel.evaluator)?"Add any override comments before completing or rejecting…":"Describe your assessment of the deliverable quality…"} style={{minHeight:72}}/>
               </div>}
 
               {/* Resolved state */}
-              {resolved&&<div style={{background:isComp?"#061a10":"#1c0808",border:`1px solid ${isComp?"#0f3a20":"#3a1010"}`,borderRadius:10,padding:"13px 15px",marginBottom:18}}>
-                <div style={{fontSize:13,color:isComp?"#22c55e":"#ef4444",fontWeight:600,marginBottom:4}}>{isComp?"Approved — USDC released":"Rejected — USDC refunded"}</div>
+              {resolved&&<div style={{background:isComp?"#E6EEE3":"#F5E4E0",border:`1px solid ${isComp?"#B8CDB4":"#D8B8AC"}`,borderRadius:10,padding:"13px 15px",marginBottom:18}}>
+                <div style={{fontSize:13,color:isComp?"#5A8A5A":"#A85440",fontWeight:600,marginBottom:4}}>{isComp?"Approved — USDC released":"Rejected — USDC refunded"}</div>
                 <div style={{fontSize:12,color:isComp?"#2a5a2a":"#5a2020",lineHeight:1.6}}>This job has been {isComp?"completed and settled on-chain":"rejected with reason stored on-chain"}.</div>
               </div>}
 
@@ -827,29 +827,29 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                 {/* Arbitration result */}
                 {arbitrationResult && (
                   <div className="fade-in" style={{
-                    background: arbitrationResult.verdict==='APPROVE' ? '#061a10' : '#1c0808',
-                    border: `1px solid ${arbitrationResult.verdict==='APPROVE' ? '#0f3a20' : '#3a1010'}`,
+                    background: arbitrationResult.verdict==='APPROVE' ? '#E6EEE3' : '#F5E4E0',
+                    border: `1px solid ${arbitrationResult.verdict==='APPROVE' ? '#B8CDB4' : '#D8B8AC'}`,
                     borderRadius: 12,
                     padding: '14px 16px',
                     marginBottom: 14,
                   }}>
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        <div style={{width:8,height:8,borderRadius:'50%',background:arbitrationResult.verdict==='APPROVE'?'#22c55e':'#ef4444'}}/>
-                        <span style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:arbitrationResult.verdict==='APPROVE'?'#22c55e':'#ef4444'}}>
+                        <div style={{width:8,height:8,borderRadius:'50%',background:arbitrationResult.verdict==='APPROVE'?'#5A8A5A':'#A85440'}}/>
+                        <span style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:14,color:arbitrationResult.verdict==='APPROVE'?'#5A8A5A':'#A85440'}}>
                           AI Verdict: {arbitrationResult.verdict}
                         </span>
                       </div>
-                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:arbitrationResult.verdict==='APPROVE'?'#22c55e':'#ef4444'}}>
+                      <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12,color:arbitrationResult.verdict==='APPROVE'?'#5A8A5A':'#A85440'}}>
                         {arbitrationResult.score}/100
                       </span>
                     </div>
-                    <p style={{fontSize:13,color:'#a0a3b8',lineHeight:1.7,marginBottom:10}}>
+                    <p style={{fontSize:13,color:'#4A4133',lineHeight:1.7,marginBottom:10}}>
                       {arbitrationResult.reasoning}
                     </p>
                     {arbitrationResult.strengths?.length > 0 && (
                       <div style={{marginBottom:8}}>
-                        <div style={{fontSize:10.5,color:'#22c55e',fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>STRENGTHS</div>
+                        <div style={{fontSize:10.5,color:'#5A8A5A',fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:4}}>STRENGTHS</div>
                         {arbitrationResult.strengths.map((s:string,i:number)=>(
                           <div key={i} style={{fontSize:12,color:'#4a7a4a',marginBottom:2}}>✓ {s}</div>
                         ))}
@@ -857,13 +857,13 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                     )}
                     {arbitrationResult.weaknesses?.length > 0 && (
                       <div style={{marginBottom:10}}>
-                        <div style={{fontSize:10.5,color:'#ef4444',fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:4}}>WEAKNESSES</div>
+                        <div style={{fontSize:10.5,color:'#A85440',fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:4}}>WEAKNESSES</div>
                         {arbitrationResult.weaknesses.map((w:string,i:number)=>(
                           <div key={i} style={{fontSize:12,color:'#7a4a4a',marginBottom:2}}>✗ {w}</div>
                         ))}
                       </div>
                     )}
-                    <div style={{fontSize:11.5,color:'#5c5f7a',borderTop:`1px solid ${arbitrationResult.verdict==='APPROVE'?'#0f3a20':'#3a1010'}`,paddingTop:10,marginTop:4}}>
+                    <div style={{fontSize:11.5,color:'#7A6A52',borderTop:`1px solid ${arbitrationResult.verdict==='APPROVE'?'#B8CDB4':'#D8B8AC'}`,paddingTop:10,marginTop:4}}>
                       AI arbitration verdict is advisory — you can still override below.
                     </div>
                   </div>
@@ -871,14 +871,14 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
 
                 {/* Action buttons */}
                 <div style={{display:'flex',gap:10}}>
-                  <button className="btn-danger" onClick={()=>onReject(sel)} style={{padding:"11px 20px",borderRadius:9,background:"#1c0808",color:"#ef4444",border:"1px solid #3a1010",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Reject</button>
+                  <button className="btn-danger" onClick={()=>onReject(sel)} style={{padding:"11px 20px",borderRadius:9,background:"#F5E4E0",color:"#A85440",border:"1px solid #D8B8AC",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Reject</button>
                   <button 
                     onClick={handleArbitration}
                     disabled={arbitrating}
-                    style={{padding:"11px 16px",borderRadius:9,background:"#0a0a1a",color:"#a78bfa",border:"1px solid #2a1a5a",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:arbitrating?"not-allowed":"pointer",opacity:arbitrating?0.6:1,transition:"all .2s"}}>
+                    style={{padding:"11px 16px",borderRadius:9,background:"#0a0a1a",color:"#7A6A9A",border:"1px solid #2a1a5a",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:arbitrating?"not-allowed":"pointer",opacity:arbitrating?0.6:1,transition:"all .2s"}}>
                     {arbitrating ? '⟳ Arbitrating…' : '⚖ AI Arbitration'}
                   </button>
-                  <button className="btn-complete" onClick={()=>onComplete(sel)} style={{flex:1,padding:"12px",borderRadius:9,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>
+                  <button className="btn-complete" onClick={()=>onComplete(sel)} style={{flex:1,padding:"12px",borderRadius:9,background:"#E6EEE3",color:"#5A8A5A",border:"1px solid #B8CDB4",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>
                     Approve &amp; Release {sel.budget} USDC →
                   </button>
                 </div>
@@ -930,24 +930,24 @@ setTxHash(tx)
 setStep("done")
 onSubmit({ score, tag, notes, txHash: tx, agentId, jobId: job.id })
 };
-  if(step==="done")return(<div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:420,maxWidth:"94vw"}}>
-    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:25,height:25,borderRadius:"50%",background:"#061a10",border:"1px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",color:"#22c55e",fontSize:12}}>✓</div><div style={{fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:700,color:"#22c55e"}}>Feedback recorded on Arc</div></div>
-    <div style={{display:"flex",alignItems:"center",gap:11,background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"11px 13px",marginBottom:12}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:26,color:scoreColor(score),lineHeight:1}}>{score}</div><div><div style={{fontSize:13,color:"#e6e8f0",fontWeight:500}}>{job.provider?.name}</div><div style={{fontSize:11,color:"#5c5f7a",marginTop:1}}>{tl}</div></div></div>
-    <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"10px 12px",marginBottom:12}}><div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:3}}>TRANSACTION</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#5a8abf",wordBreak:"break-all"}}>{txHash}</div><div style={{fontSize:11,color:"#2a4a6a",marginTop:3}}>ReputationRegistry · giveFeedback()</div></div>
+  if(step==="done")return(<div className="slide-up" style={{background:"#F5F0E8",border:"1px solid #C8BFA8",borderRadius:16,padding:26,width:420,maxWidth:"94vw"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:25,height:25,borderRadius:"50%",background:"#E6EEE3",border:"1px solid #5A8A5A",display:"flex",alignItems:"center",justifyContent:"center",color:"#5A8A5A",fontSize:12}}>✓</div><div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:"#5A8A5A"}}>Feedback recorded on Arc</div></div>
+    <div style={{display:"flex",alignItems:"center",gap:11,background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:10,padding:"11px 13px",marginBottom:12}}><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:26,color:scoreColor(score),lineHeight:1}}>{score}</div><div><div style={{fontSize:13,color:"#1A1712",fontWeight:500}}>{job.provider?.name}</div><div style={{fontSize:11,color:"#7A6A52",marginTop:1}}>{tl}</div></div></div>
+    <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px",marginBottom:12}}><div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:3}}>TRANSACTION</div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10.5,color:"#6A5E4A",wordBreak:"break-all"}}>{txHash}</div><div style={{fontSize:11,color:"#2a4a6a",marginTop:3}}>ReputationRegistry · giveFeedback()</div></div>
     <div style={{background:"#0a0f08",border:"1px solid #162410",borderRadius:9,padding:"9px 12px",marginBottom:16}}><div style={{fontSize:11.5,color:"#2a4a28",lineHeight:1.6}}>Per ERC-8004, this was recorded by your wallet — not the agent's. Now part of {job.provider?.name}'s permanent onchain reputation.</div></div>
-    <button className="btn-pri" onClick={onClose} style={{width:"100%",padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Done</button>
+    <button className="btn-pri" onClick={onClose} style={{width:"100%",padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Done</button>
   </div>);
   if(step==="submitting")return<div style={{width:400,maxWidth:"94vw"}}><TxProgress label="Recording reputation…" contractAddr="ReputationRegistry · 0x8004B663…388713" steps={[{label:"Sending to ReputationRegistry",done:true},{label:"Confirming on Arc testnet",done:false},{label:"Attestation stored on-chain",done:false}]}/></div>;
-  return(<div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:420,maxWidth:"94vw"}}>
-    <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}><div><div style={{fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:700,color:"#fff",marginBottom:2}}>Rate {job.provider?.name}</div><div style={{fontSize:11.5,color:"#5c5f7a"}}>{job.title.slice(0,44)}{job.title.length>44?"…":""}</div></div><button onClick={onClose} style={{background:"none",border:"none",color:"#4a4d66",cursor:"pointer",fontSize:20,lineHeight:1,padding:0,flexShrink:0}}>×</button></div>
-    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:12,padding:"13px 15px",marginBottom:13}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}><div style={{fontSize:12.5,color:"#7b7e96"}}>Reputation score</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:25,color:scoreColor(score),lineHeight:1}}>{score}<span style={{fontSize:12,color:"#3a3d58",fontWeight:400}}>/100</span></div></div><input type="range" min="0" max="100" value={score} onChange={e=>setScore(Number(e.target.value))} style={{width:"100%"}}/><div style={{display:"flex",justifyContent:"space-between",marginTop:5}}><span style={{fontSize:11,color:"#ef4444"}}>0 – Poor</span><span style={{fontSize:11,color:"#22c55e"}}>100 – Excellent</span></div></div>
-    <div style={{marginBottom:12}}><label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:5}}>Feedback tag</label><select value={tag} onChange={e=>setTag(e.target.value)}>{FEEDBACK_TAGS.map(t=><option key={t.value} value={t.value}>{t.label}</option>)}</select></div>
-    <div style={{marginBottom:13}}><label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:5}}>Notes <span style={{color:"#3a3d58"}}>(optional)</span></label><textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Describe the quality of work…" style={{minHeight:64}}/></div>
-    <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"9px 11px",marginBottom:12}}>{[{l:"Agent ID",v:`#${agentId}`},{l:"Score",v:`${score} / int128`},{l:"Tag",v:tag},{l:"feedbackHash",v:`${fh.slice(0,18)}…`}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:"#3a5a7a"}}>{r.l}</span><span style={{fontSize:12,color:"#6b8fb0",fontFamily:"'JetBrains Mono',monospace"}}>{r.v}</span></div>)}</div>
-    <div style={{background:"#100a00",border:"1px solid #2a1800",borderRadius:8,padding:"8px 11px",marginBottom:13,display:"flex",gap:8,alignItems:"flex-start"}}><span style={{color:"#f59e0b",fontSize:12,flexShrink:0,marginTop:1}}>⚠</span><div style={{fontSize:11.5,color:"#7a5a20",lineHeight:1.6}}>Your wallet must not own Agent #{agentId}. ERC-8004 rejects self-attested reputation.</div></div>
+  return(<div className="slide-up" style={{background:"#F5F0E8",border:"1px solid #C8BFA8",borderRadius:16,padding:26,width:420,maxWidth:"94vw"}}>
+    <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}><div><div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:"#1A1712",marginBottom:2}}>Rate {job.provider?.name}</div><div style={{fontSize:11.5,color:"#7A6A52"}}>{job.title.slice(0,44)}{job.title.length>44?"…":""}</div></div><button onClick={onClose} style={{background:"none",border:"none",color:"#9A8A72",cursor:"pointer",fontSize:20,lineHeight:1,padding:0,flexShrink:0}}>×</button></div>
+    <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:12,padding:"13px 15px",marginBottom:13}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}><div style={{fontSize:12.5,color:"#6A5E4A"}}>Reputation score</div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:25,color:scoreColor(score),lineHeight:1}}>{score}<span style={{fontSize:12,color:"#9A8A72",fontWeight:400}}>/100</span></div></div><input type="range" min="0" max="100" value={score} onChange={e=>setScore(Number(e.target.value))} style={{width:"100%"}}/><div style={{display:"flex",justifyContent:"space-between",marginTop:5}}><span style={{fontSize:11,color:"#A85440"}}>0 – Poor</span><span style={{fontSize:11,color:"#5A8A5A"}}>100 – Excellent</span></div></div>
+    <div style={{marginBottom:12}}><label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:5}}>Feedback tag</label><select value={tag} onChange={e=>setTag(e.target.value)}>{FEEDBACK_TAGS.map(t=><option key={t.value} value={t.value}>{t.label}</option>)}</select></div>
+    <div style={{marginBottom:13}}><label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:5}}>Notes <span style={{color:"#9A8A72"}}>(optional)</span></label><textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Describe the quality of work…" style={{minHeight:64}}/></div>
+    <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"9px 11px",marginBottom:12}}>{[{l:"Agent ID",v:`#${agentId}`},{l:"Score",v:`${score} / int128`},{l:"Tag",v:tag},{l:"feedbackHash",v:`${fh.slice(0,18)}…`}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:"#7A6A52"}}>{r.l}</span><span style={{fontSize:12,color:"#6b8fb0",fontFamily:"'IBM Plex Mono',monospace"}}>{r.v}</span></div>)}</div>
+    <div style={{background:"#100a00",border:"1px solid #2a1800",borderRadius:8,padding:"8px 11px",marginBottom:13,display:"flex",gap:8,alignItems:"flex-start"}}><span style={{color:"#B07A2A",fontSize:12,flexShrink:0,marginTop:1}}>⚠</span><div style={{fontSize:11.5,color:"#7a5a20",lineHeight:1.6}}>Your wallet must not own Agent #{agentId}. ERC-8004 rejects self-attested reputation.</div></div>
     <div style={{display:"flex",gap:10}}>
-      <button className="btn-sec" onClick={onClose} style={{padding:"10px 14px",borderRadius:9,background:"transparent",color:"#6b6e88",border:"1px solid #1e2238",fontSize:13,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Cancel</button>
-      <button className="btn-approve" onClick={handleSubmit} style={{flex:1,padding:"11px",borderRadius:9,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Submit Feedback →</button>
+      <button className="btn-sec" onClick={onClose} style={{padding:"10px 14px",borderRadius:9,background:"transparent",color:"#7A6A52",border:"1px solid #C8BFA8",fontSize:13,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>Cancel</button>
+      <button className="btn-approve" onClick={handleSubmit} style={{flex:1,padding:"11px",borderRadius:9,background:"#E6EEE3",color:"#5A8A5A",border:"1px solid #B8CDB4",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Submit Feedback →</button>
     </div>
   </div>);
 }
@@ -1013,22 +1013,22 @@ function SubmitDeliverableModal({ job, myAgent, onClose, onSubmit }) {
     }
   }
 }
-  if(step==="done"&&result)return(<div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
-    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}><div style={{width:25,height:25,borderRadius:"50%",background:"#041c2a",border:"1px solid #38bdf8",display:"flex",alignItems:"center",justifyContent:"center",color:"#38bdf8",fontSize:12}}>✓</div><div style={{fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:700,color:"#38bdf8"}}>Deliverable submitted</div></div>
-    <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:10,padding:"12px 13px",marginBottom:13}}><div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:5}}>DELIVERABLE STORED ON-CHAIN</div><div style={{fontSize:12,color:"#7090b0",marginBottom:6,wordBreak:"break-all"}}>{result.value}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#38bdf8",wordBreak:"break-all",lineHeight:1.6}}>{result.delivHash}</div></div>
-    <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"10px 12px",marginBottom:13}}><div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:3}}>TRANSACTION</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#5a8abf",wordBreak:"break-all"}}>{result.txHash}</div><div style={{fontSize:11,color:"#2a4a6a",marginTop:3}}>AgenticCommerce · submit(uint256,bytes32,bytes)</div></div>
-    <button className="btn-pri" onClick={onClose} style={{width:"100%",padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Done</button>
+  if(step==="done"&&result)return(<div className="slide-up" style={{background:"#F5F0E8",border:"1px solid #C8BFA8",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}><div style={{width:25,height:25,borderRadius:"50%",background:"#E4EDE6",border:"1px solid #5A7A6A",display:"flex",alignItems:"center",justifyContent:"center",color:"#5A7A6A",fontSize:12}}>✓</div><div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:"#5A7A6A"}}>Deliverable submitted</div></div>
+    <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:10,padding:"12px 13px",marginBottom:13}}><div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:5}}>DELIVERABLE STORED ON-CHAIN</div><div style={{fontSize:12,color:"#4A4133",marginBottom:6,wordBreak:"break-all"}}>{result.value}</div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10.5,color:"#5A7A6A",wordBreak:"break-all",lineHeight:1.6}}>{result.delivHash}</div></div>
+    <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px",marginBottom:13}}><div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:3}}>TRANSACTION</div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10.5,color:"#6A5E4A",wordBreak:"break-all"}}>{result.txHash}</div><div style={{fontSize:11,color:"#2a4a6a",marginTop:3}}>AgenticCommerce · submit(uint256,bytes32,bytes)</div></div>
+    <button className="btn-pri" onClick={onClose} style={{width:"100%",padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Done</button>
   </div>);
   if(step==="submitting")return<div style={{width:420,maxWidth:"94vw"}}><TxProgress label="Submitting deliverable…" contractAddr="AgenticCommerce · 0x0747EEf0…e4583" steps={[{label:"Hashing deliverable reference",done:true},{label:"Sending submit() to AgenticCommerce",done:false},{label:"Job state: Funded → Submitted",done:false}]}/></div>;
-  return(<div className="slide-up" style={{background:"#09090f",border:"1px solid #1a1e30",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
-    <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18}}><div><div style={{fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:700,color:"#fff",marginBottom:2}}>Submit deliverable</div><div style={{fontSize:12,color:"#5c5f7a"}}>{job.title.slice(0,44)}{job.title.length>44?"…":""}</div></div><button onClick={onClose} style={{background:"none",border:"none",color:"#4a4d66",cursor:"pointer",fontSize:20,lineHeight:1,padding:0,flexShrink:0}}>×</button></div>
-    <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"9px 12px",marginBottom:13,display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12.5,color:"#5a7a9a"}}>USDC in escrow</span><span style={{fontFamily:"'JetBrains Mono',monospace",color:"#38bdf8",fontSize:14,fontWeight:600}}>{job.budget} USDC</span></div>
-    <div style={{marginBottom:13}}><div style={{fontSize:12.5,color:"#7b7e96",marginBottom:7}}>Deliverable type</div><div style={{display:"flex",gap:7}}>{DELIVERABLE_TYPES.map(d=><button key={d.id} className={`dtype-btn ${dtype===d.id?"on":""}`} onClick={()=>{setDtype(d.id);setValue("");}} style={{flex:1,padding:"7px 5px",borderRadius:8,border:"1px solid #1e2238",background:"#0d0f1a",color:dtype===d.id?"#6b7fff":"#6b6e88",fontSize:11.5,fontFamily:"'DM Sans',sans-serif",textAlign:"center"}}>{d.label}</button>)}</div><div style={{fontSize:11,color:"#3a5a7a",marginTop:6}}>{dtypeInfo.hint}</div></div>
+  return(<div className="slide-up" style={{background:"#F5F0E8",border:"1px solid #C8BFA8",borderRadius:16,padding:26,width:440,maxWidth:"94vw"}}>
+    <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:18}}><div><div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:"#1A1712",marginBottom:2}}>Submit deliverable</div><div style={{fontSize:12,color:"#7A6A52"}}>{job.title.slice(0,44)}{job.title.length>44?"…":""}</div></div><button onClick={onClose} style={{background:"none",border:"none",color:"#9A8A72",cursor:"pointer",fontSize:20,lineHeight:1,padding:0,flexShrink:0}}>×</button></div>
+    <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"9px 12px",marginBottom:13,display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12.5,color:"#6A5E4A"}}>USDC in escrow</span><span style={{fontFamily:"'IBM Plex Mono',monospace",color:"#5A7A6A",fontSize:14,fontWeight:600}}>{job.budget} USDC</span></div>
+    <div style={{marginBottom:13}}><div style={{fontSize:12.5,color:"#6A5E4A",marginBottom:7}}>Deliverable type</div><div style={{display:"flex",gap:7}}>{DELIVERABLE_TYPES.map(d=><button key={d.id} className={`dtype-btn ${dtype===d.id?"on":""}`} onClick={()=>{setDtype(d.id);setValue("");}} style={{flex:1,padding:"7px 5px",borderRadius:8,border:"1px solid #C8BFA8",background:"#FDFBF6",color:dtype===d.id?"#1A1712":"#7A6A52",fontSize:11.5,fontFamily:"'Inter',sans-serif",textAlign:"center"}}>{d.label}</button>)}</div><div style={{fontSize:11,color:"#7A6A52",marginTop:6}}>{dtypeInfo.hint}</div></div>
     <div style={{marginBottom:14}}>{dtype==="hash"?<textarea value={value} onChange={e=>setValue(e.target.value)} placeholder={dtypeInfo.placeholder} style={{minHeight:72}}/>:<input value={value} onChange={e=>setValue(e.target.value)} placeholder={dtypeInfo.placeholder}/>}</div>
-    <div style={{background:"#080910",border:`1px solid ${ready?"#1a2a40":"#14162a"}`,borderRadius:9,padding:"12px 14px",marginBottom:14,transition:"border-color .2s"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}><div style={{fontSize:9.5,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>DELIVERABLE HASH (bytes32)</div><div style={{fontSize:10,color:ready?"#22c55e":"#3a3d58"}}>{ready?"● ready":"○ waiting"}</div></div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:ready?"#38bdf8":"#2a2d48",wordBreak:"break-all",lineHeight:1.7,transition:"color .2s"}}>{delivHash}</div></div>
+    <div style={{background:"#EDE8DC",border:`1px solid ${ready?"#1a2a40":"#C8BFA8"}`,borderRadius:9,padding:"12px 14px",marginBottom:14,transition:"border-color .2s"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}><div style={{fontSize:9.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5}}>DELIVERABLE HASH (bytes32)</div><div style={{fontSize:10,color:ready?"#5A8A5A":"#9A8A72"}}>{ready?"● ready":"○ waiting"}</div></div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10.5,color:ready?"#5A7A6A":"#B5AB94",wordBreak:"break-all",lineHeight:1.7,transition:"color .2s"}}>{delivHash}</div></div>
     <div style={{display:"flex",gap:10}}>
-      <button className="btn-sec" onClick={onClose} style={{padding:"10px 14px",borderRadius:9,background:"transparent",color:"#6b6e88",border:"1px solid #1e2238",fontSize:13,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Cancel</button>
-      <button className="btn-submit" disabled={!ready} onClick={handleSubmit} style={{flex:1,padding:"11px",borderRadius:9,background:"#041c2a",color:"#38bdf8",border:"1px solid #0d3050",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:ready?"pointer":"not-allowed",opacity:ready?1:.4}}>Submit Deliverable →</button>
+      <button className="btn-sec" onClick={onClose} style={{padding:"10px 14px",borderRadius:9,background:"transparent",color:"#7A6A52",border:"1px solid #C8BFA8",fontSize:13,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>Cancel</button>
+      <button className="btn-submit" disabled={!ready} onClick={handleSubmit} style={{flex:1,padding:"11px",borderRadius:9,background:"#E4EDE6",color:"#5A7A6A",border:"1px solid #B8C8BC",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:ready?"pointer":"not-allowed",opacity:ready?1:.4}}>Submit Deliverable →</button>
     </div>
   </div>);
 }
@@ -1179,34 +1179,34 @@ const USDC_ABI = [
   },
 ] as const
   if(regStep==="done"&&agent)return(<div style={{padding:"26px 30px",maxWidth:500}} className="fade-in">
-    <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:16}}><div style={{width:24,height:24,borderRadius:"50%",background:"#061a10",border:"1px solid #22c55e",display:"flex",alignItems:"center",justifyContent:"center",color:"#22c55e",fontSize:11}}>✓</div><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:16,fontWeight:700,color:"#22c55e"}}>Agent registered on Arc</h1></div>
-    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:13,padding:16,marginBottom:12}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:34,height:34,borderRadius:8,background:cb(agent.capabilities[0]||"Writing"),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:12,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"#4a4d66",marginBottom:1}}>AGENT ID</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#6b7fff"}}>#{agent.id}</div></div></div>
+    <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:16}}><div style={{width:24,height:24,borderRadius:"50%",background:"#E6EEE3",border:"1px solid #5A8A5A",display:"flex",alignItems:"center",justifyContent:"center",color:"#5A8A5A",fontSize:11}}>✓</div><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:"#5A8A5A"}}>Agent registered on Arc</h1></div>
+    <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:13,padding:16,marginBottom:12}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:34,height:34,borderRadius:8,background:cb(agent.capabilities[0]||"Writing"),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:12,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:14,color:"#1A1712"}}>{agent.name}</div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10,color:"#9A8A72",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:9,color:"#9A8A72",marginBottom:1}}>AGENT ID</div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:18,color:"#1A1712"}}>#{agent.id}</div></div></div>
     <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div></div>
-    <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"9px 12px",marginBottom:12}}><div style={{fontSize:9,color:"#3a5a7a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:3}}>TX</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#5a8abf",wordBreak:"break-all"}}>{agent.txHash}</div></div>
+    <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"9px 12px",marginBottom:12}}><div style={{fontSize:9,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:3}}>TX</div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10,color:"#6A5E4A",wordBreak:"break-all"}}>{agent.txHash}</div></div>
     <div style={{background:"#0a0f08",border:"1px solid #162410",borderRadius:9,padding:"9px 12px",marginBottom:16}}><div style={{fontSize:11.5,color:"#2a4a28",lineHeight:1.6}}>ERC-8004 prevents self-reporting. Reputation is recorded by clients and validators after you complete work.</div></div>
-    <button className="btn-pri" onClick={()=>onRegistered(agent,true)} style={{width:"100%",padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Browse Open Jobs →</button>
+    <button className="btn-pri" onClick={()=>onRegistered(agent,true)} style={{width:"100%",padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Browse Open Jobs →</button>
   </div>);
   if(regStep==="registering")return<div style={{padding:"26px 30px",maxWidth:440}}><TxProgress label="Registering agent identity…" contractAddr="IdentityRegistry · 0x8004A818…494BD9e" steps={[{label:"Sending to IdentityRegistry",done:true},{label:"Confirming on Arc testnet",done:false},{label:"Minting identity NFT",done:false}]}/></div>;
   return(<div style={{padding:"26px 30px",maxWidth:520}}>
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}><div><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:2}}>Register your agent</h1><p style={{fontSize:12.5,color:"#5c5f7a"}}>Mint an ERC-8004 identity NFT on Arc Testnet</p></div><StepDots step={step} total={3}/></div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}><div><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:19,fontWeight:700,color:"#1A1712",letterSpacing:"-0.5px",marginBottom:2}}>Register your agent</h1><p style={{fontSize:12.5,color:"#7A6A52"}}>Mint an ERC-8004 identity NFT on Arc Testnet</p></div><StepDots step={step} total={3}/></div>
     {step===1&&<div className="fade-in" style={{display:"flex",flexDirection:"column",gap:14}}>
-      <div style={{fontSize:10,color:"#4a4d66",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>STEP 1 — PROFILE</div>
-      <div><label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:5}}>Agent name</label><input value={form.name} onChange={e=>upd("name",e.target.value)} placeholder="e.g. ContentBot Alpha"/></div>
-      <div><label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:5}}>Description</label><textarea value={form.description} onChange={e=>upd("description",e.target.value)} placeholder="What does your agent specialise in?" style={{minHeight:68}}/></div>
-      <div><label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:7}}>Agent type</label><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{AGENT_TYPES.map(t=><button key={t} className={`type-chip ${form.type===t?"sel":""}`} onClick={()=>upd("type",t)} style={{fontSize:12,padding:"5px 10px",borderRadius:7,border:"1px solid #1a1e30",background:"#0d0f1a",color:form.type===t?"#6b7fff":"#6b6e88",fontFamily:"'DM Sans',sans-serif"}}>{t}</button>)}</div></div>
-      <button className="btn-pri" disabled={!form.name.trim()||!form.type} onClick={()=>setStep(2)} style={{padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:form.name.trim()&&form.type?"pointer":"not-allowed",opacity:form.name.trim()&&form.type?1:.4}}>Next: Capabilities →</button>
+      <div style={{fontSize:10,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5}}>STEP 1 — PROFILE</div>
+      <div><label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:5}}>Agent name</label><input value={form.name} onChange={e=>upd("name",e.target.value)} placeholder="e.g. ContentBot Alpha"/></div>
+      <div><label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:5}}>Description</label><textarea value={form.description} onChange={e=>upd("description",e.target.value)} placeholder="What does your agent specialise in?" style={{minHeight:68}}/></div>
+      <div><label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:7}}>Agent type</label><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{AGENT_TYPES.map(t=><button key={t} className={`type-chip ${form.type===t?"sel":""}`} onClick={()=>upd("type",t)} style={{fontSize:12,padding:"5px 10px",borderRadius:7,border:"1px solid #C8BFA8",background:"#FDFBF6",color:form.type===t?"#1A1712":"#7A6A52",fontFamily:"'Inter',sans-serif"}}>{t}</button>)}</div></div>
+      <button className="btn-pri" disabled={!form.name.trim()||!form.type} onClick={()=>setStep(2)} style={{padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:form.name.trim()&&form.type?"pointer":"not-allowed",opacity:form.name.trim()&&form.type?1:.4}}>Next: Capabilities →</button>
     </div>}
     {step===2&&<div className="fade-in" style={{display:"flex",flexDirection:"column",gap:14}}>
-      <div style={{fontSize:10,color:"#4a4d66",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>STEP 2 — CAPABILITIES</div>
-      <div><label style={{fontSize:12.5,color:"#7b7e96",display:"block",marginBottom:7}}>Select all that apply</label><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{CAPABILITIES.map(cap=>{const sel=form.capabilities.includes(cap);return<button key={cap} className={`cap-chip ${sel?"sel":""}`} onClick={()=>toggleCap(cap)} style={{fontSize:12,padding:"5px 10px",borderRadius:7,border:sel?`1px solid ${cc(cap)}40`:"1px solid #1a1e30",background:sel?cb(cap):"#0d0f1a",color:sel?cc(cap):"#6b6e88",fontFamily:"'DM Sans',sans-serif"}}>{sel&&<span style={{marginRight:4,fontSize:10}}>✓</span>}{cap}</button>;})}</div></div>
-      <div style={{display:"flex",gap:9}}><button className="btn-sec" onClick={()=>setStep(1)} style={{padding:"10px 14px",borderRadius:9,background:"transparent",color:"#6b6e88",border:"1px solid #1e2238",fontSize:12.5,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>← Back</button><button className="btn-pri" disabled={!form.capabilities.length} onClick={()=>setStep(3)} style={{flex:1,padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:form.capabilities.length?"pointer":"not-allowed",opacity:form.capabilities.length?1:.4}}>Review & Register →</button></div>
+      <div style={{fontSize:10,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5}}>STEP 2 — CAPABILITIES</div>
+      <div><label style={{fontSize:12.5,color:"#6A5E4A",display:"block",marginBottom:7}}>Select all that apply</label><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{CAPABILITIES.map(cap=>{const sel=form.capabilities.includes(cap);return<button key={cap} className={`cap-chip ${sel?"sel":""}`} onClick={()=>toggleCap(cap)} style={{fontSize:12,padding:"5px 10px",borderRadius:7,border:sel?`1px solid ${cc(cap)}40`:"1px solid #C8BFA8",background:sel?cb(cap):"#FDFBF6",color:sel?cc(cap):"#7A6A52",fontFamily:"'Inter',sans-serif"}}>{sel&&<span style={{marginRight:4,fontSize:10}}>✓</span>}{cap}</button>;})}</div></div>
+      <div style={{display:"flex",gap:9}}><button className="btn-sec" onClick={()=>setStep(1)} style={{padding:"10px 14px",borderRadius:9,background:"transparent",color:"#7A6A52",border:"1px solid #C8BFA8",fontSize:12.5,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>← Back</button><button className="btn-pri" disabled={!form.capabilities.length} onClick={()=>setStep(3)} style={{flex:1,padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:form.capabilities.length?"pointer":"not-allowed",opacity:form.capabilities.length?1:.4}}>Review & Register →</button></div>
     </div>}
     {step===3&&<div className="fade-in" style={{display:"flex",flexDirection:"column",gap:14}}>
-      <div style={{fontSize:10,color:"#4a4d66",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>STEP 3 — REVIEW & REGISTER</div>
-      <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:14}}><div style={{display:"flex",alignItems:"center",gap:9,marginBottom:9}}><div style={{width:32,height:32,borderRadius:7,background:cb(form.capabilities[0]||"Writing"),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:11,color:cc(form.capabilities[0]||"Writing")}}>{(form.name||"??").slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:14,color:"#e6e8f0"}}>{form.name}</div><div style={{fontSize:11,color:"#5c5f7a",marginTop:1}}>{form.type} · v{form.version}</div></div></div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{form.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div></div>
-      <div><div style={{fontSize:10,color:"#4a4d66",fontFamily:"'JetBrains Mono',monospace",marginBottom:4,letterSpacing:.5}}>METADATA (upload to IPFS in production)</div><pre style={{background:"#080910",border:"1px solid #1a1e30",borderRadius:8,padding:"10px 12px",fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,color:"#6070a0",overflowX:"auto",lineHeight:1.7,maxHeight:130,overflowY:"auto"}}>{meta}</pre></div>
-      <div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"9px 12px"}}>{[{l:"Contract",v:"IdentityRegistry (ERC-8004)"},{l:"Function",v:"register(string metadataURI)"},{l:"Network",v:"Arc Testnet · Chain 5042002"}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:"#3a5a7a"}}>{r.l}</span><span style={{fontSize:12,color:"#6b8fb0",fontFamily:"'JetBrains Mono',monospace"}}>{r.v}</span></div>)}</div>
-      <div style={{display:"flex",gap:9}}><button className="btn-sec" onClick={()=>setStep(2)} style={{padding:"10px 14px",borderRadius:9,background:"transparent",color:"#6b6e88",border:"1px solid #1e2238",fontSize:12.5,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>← Back</button><button className="btn-pri" onClick={reg} style={{flex:1,padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Register on Arc →</button></div>
+      <div style={{fontSize:10,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5}}>STEP 3 — REVIEW & REGISTER</div>
+      <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:10,padding:14}}><div style={{display:"flex",alignItems:"center",gap:9,marginBottom:9}}><div style={{width:32,height:32,borderRadius:7,background:cb(form.capabilities[0]||"Writing"),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:11,color:cc(form.capabilities[0]||"Writing")}}>{(form.name||"??").slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:14,color:"#1A1712"}}>{form.name}</div><div style={{fontSize:11,color:"#7A6A52",marginTop:1}}>{form.type} · v{form.version}</div></div></div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{form.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div></div>
+      <div><div style={{fontSize:10,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",marginBottom:4,letterSpacing:.5}}>METADATA (upload to IPFS in production)</div><pre style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:8,padding:"10px 12px",fontFamily:"'IBM Plex Mono',monospace",fontSize:10.5,color:"#6070a0",overflowX:"auto",lineHeight:1.7,maxHeight:130,overflowY:"auto"}}>{meta}</pre></div>
+      <div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"9px 12px"}}>{[{l:"Contract",v:"IdentityRegistry (ERC-8004)"},{l:"Function",v:"register(string metadataURI)"},{l:"Network",v:"Arc Testnet · Chain 5042002"}].map(r=><div key={r.l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:"#7A6A52"}}>{r.l}</span><span style={{fontSize:12,color:"#6b8fb0",fontFamily:"'IBM Plex Mono',monospace"}}>{r.v}</span></div>)}</div>
+      <div style={{display:"flex",gap:9}}><button className="btn-sec" onClick={()=>setStep(2)} style={{padding:"10px 14px",borderRadius:9,background:"transparent",color:"#7A6A52",border:"1px solid #C8BFA8",fontSize:12.5,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>← Back</button><button className="btn-pri" onClick={reg} style={{flex:1,padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Register on Arc →</button></div>
     </div>}
   </div>);
 }
@@ -1216,30 +1216,30 @@ const USDC_ABI = [
 function AgentDashboard({ agent, feedbackHistory, activeJobs, deliverableMap, onBrowseJobs, onSubmitDeliverable }) {
   const latest = feedbackHistory.length ? feedbackHistory[feedbackHistory.length-1].score : (agent.score||0);
   return (<div style={{padding:"24px 28px",maxWidth:620}}>
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px"}}>My Agent</h1><span style={{fontSize:10.5,background:"#12153a",color:"#6b7fff",padding:"3px 8px",borderRadius:6,fontFamily:"'JetBrains Mono',monospace"}}>ID #{agent.id}</span></div>
-    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:13,padding:16,marginBottom:11}}><div style={{display:"flex",alignItems:"center",gap:11,marginBottom:13}}><div style={{width:38,height:38,borderRadius:9,background:cb(agent.capabilities[0]||"Writing"),border:`1px solid ${cc(agent.capabilities[0]||"Writing")}30`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:13,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div style={{flex:1}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:14.5,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:23,color:sc(latest),lineHeight:1}}>{latest||"—"}</div><div style={{fontSize:9,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginTop:1}}>REP SCORE</div></div></div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div></div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:11}}>{[{l:"Jobs completed",v:agent.completed||"0"},{l:"USDC earned",v:agent.earned?"$"+agent.earned.toLocaleString():"0"},{l:"Attestations",v:feedbackHistory.length}].map(s=><div key={s.l} style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:9,padding:"10px 12px"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:500,color:"#c0c4de",marginBottom:2}}>{s.v}</div><div style={{fontSize:10.5,color:"#4a4d66"}}>{s.l}</div></div>)}</div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:19,fontWeight:700,color:"#1A1712",letterSpacing:"-0.5px"}}>My Agent</h1><span style={{fontSize:10.5,background:"#EDE8DC",color:"#1A1712",padding:"3px 8px",borderRadius:6,fontFamily:"'IBM Plex Mono',monospace"}}>ID #{agent.id}</span></div>
+    <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:13,padding:16,marginBottom:11}}><div style={{display:"flex",alignItems:"center",gap:11,marginBottom:13}}><div style={{width:38,height:38,borderRadius:9,background:cb(agent.capabilities[0]||"Writing"),border:`1px solid ${cc(agent.capabilities[0]||"Writing")}30`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:13,color:cc(agent.capabilities[0]||"Writing")}}>{agent.name.slice(0,2).toUpperCase()}</div><div style={{flex:1}}><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:14.5,color:"#1A1712"}}>{agent.name}</div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10,color:"#9A8A72",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:23,color:sc(latest),lineHeight:1}}>{latest||"—"}</div><div style={{fontSize:9,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",marginTop:1}}>REP SCORE</div></div></div><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div></div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:11}}>{[{l:"Jobs completed",v:agent.completed||"0"},{l:"USDC earned",v:agent.earned?"$"+agent.earned.toLocaleString():"0"},{l:"Attestations",v:feedbackHistory.length}].map(s=><div key={s.l} style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px"}}><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:14,fontWeight:500,color:"#1A1712",marginBottom:2}}>{s.v}</div><div style={{fontSize:10.5,color:"#9A8A72"}}>{s.l}</div></div>)}</div>
     {/* Active jobs */}
-    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"12px 14px",marginBottom:11}}>
-      <div style={{fontSize:9.5,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:10}}>ACTIVE JOBS (ERC-8183)</div>
-      {activeJobs.length===0?<div style={{textAlign:"center",padding:"12px 0",fontSize:13,color:"#3a3d58"}}>No active jobs yet.</div>:activeJobs.map(j=>{
+    <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:10,padding:"12px 14px",marginBottom:11}}>
+      <div style={{fontSize:9.5,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:10}}>ACTIVE JOBS (ERC-8183)</div>
+      {activeJobs.length===0?<div style={{textAlign:"center",padding:"12px 0",fontSize:13,color:"#9A8A72"}}>No active jobs yet.</div>:activeJobs.map(j=>{
         const submitted=!!deliverableMap[j.id];const ss=statusSty(submitted?"submitted":"funded");
-        return<div key={j.id} style={{background:"#080910",border:"1px solid #14162a",borderRadius:8,padding:"11px 12px",marginBottom:7}}>
+        return<div key={j.id} style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:8,padding:"11px 12px",marginBottom:7}}>
           <div style={{display:"flex",alignItems:"flex-start",gap:9}}>
-            <div style={{flex:1}}><div style={{display:"flex",gap:5,marginBottom:4}}><span style={{fontSize:10.5,padding:"2px 6px",borderRadius:4,background:cb(j.category),color:cc(j.category)}}>{j.category}</span><span style={{fontSize:10.5,padding:"2px 6px",borderRadius:4,background:ss.bg,color:ss.color}}>{submitted?"Delivered":"Funded"}</span></div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:13,color:"#e6e8f0",marginBottom:3,lineHeight:1.3}}>{j.title}</div><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:"#2775ca"}}>{j.budget} USDC</span></div>
-            {submitted?<div style={{fontSize:11,color:"#38bdf8",background:"#041c2a",border:"1px solid #0d3050",padding:"5px 9px",borderRadius:6,textAlign:"center",flexShrink:0,whiteSpace:"nowrap"}}>Awaiting<br/>review</div>:<button className="btn-submit" onClick={()=>onSubmitDeliverable(j)} style={{fontSize:11.5,padding:"6px 10px",borderRadius:7,background:"#041c2a",color:"#38bdf8",border:"1px solid #0d3050",fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer",flexShrink:0}}>Submit →</button>}
+            <div style={{flex:1}}><div style={{display:"flex",gap:5,marginBottom:4}}><span style={{fontSize:10.5,padding:"2px 6px",borderRadius:4,background:cb(j.category),color:cc(j.category)}}>{j.category}</span><span style={{fontSize:10.5,padding:"2px 6px",borderRadius:4,background:ss.bg,color:ss.color}}>{submitted?"Delivered":"Funded"}</span></div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:13,color:"#1A1712",marginBottom:3,lineHeight:1.3}}>{j.title}</div><span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11,color:"#7A6A52"}}>{j.budget} USDC</span></div>
+            {submitted?<div style={{fontSize:11,color:"#5A7A6A",background:"#E4EDE6",border:"1px solid #B8C8BC",padding:"5px 9px",borderRadius:6,textAlign:"center",flexShrink:0,whiteSpace:"nowrap"}}>Awaiting<br/>review</div>:<button className="btn-submit" onClick={()=>onSubmitDeliverable(j)} style={{fontSize:11.5,padding:"6px 10px",borderRadius:7,background:"#E4EDE6",color:"#5A7A6A",border:"1px solid #B8C8BC",fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer",flexShrink:0}}>Submit →</button>}
           </div>
-          <div style={{marginTop:9,paddingTop:8,borderTop:"1px solid #0f1020",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#3a5a7a"}}>Escrowed on Arc</span><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11.5,color:"#38bdf8",fontWeight:500}}>{j.budget} USDC</span></div>
+          <div style={{marginTop:9,paddingTop:8,borderTop:"1px solid #D8D0C0",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#7A6A52"}}>Escrowed on Arc</span><span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11.5,color:"#5A7A6A",fontWeight:500}}>{j.budget} USDC</span></div>
         </div>;
       })}
     </div>
     {/* Reputation history */}
-    <div style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"12px 14px",marginBottom:11}}>
-      <div style={{fontSize:9.5,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:10}}>REPUTATION HISTORY (ERC-8004)</div>
-      {feedbackHistory.length===0?<div style={{textAlign:"center",padding:"12px 0",fontSize:13,color:"#3a3d58"}}>No attestations yet.</div>:feedbackHistory.map((f,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid #0f1020"}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:16,color:scoreColor(f.score),width:28,flexShrink:0}}>{f.score}</div><div style={{flex:1}}><div style={{fontSize:12.5,color:"#a0a3b8"}}>{FEEDBACK_TAGS.find(t=>t.value===f.tag)?.label||f.tag}</div><div style={{fontSize:10,color:"#3a3d58",marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{f.txHash?.slice(0,18)}…</div></div><div style={{fontSize:10,color:"#22c55e",background:"#061a10",padding:"2px 6px",borderRadius:4}}>Verified</div></div>)}
+    <div style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:10,padding:"12px 14px",marginBottom:11}}>
+      <div style={{fontSize:9.5,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:10}}>REPUTATION HISTORY (ERC-8004)</div>
+      {feedbackHistory.length===0?<div style={{textAlign:"center",padding:"12px 0",fontSize:13,color:"#9A8A72"}}>No attestations yet.</div>:feedbackHistory.map((f,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid #D8D0C0"}}><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:16,color:scoreColor(f.score),width:28,flexShrink:0}}>{f.score}</div><div style={{flex:1}}><div style={{fontSize:12.5,color:"#4A4133"}}>{FEEDBACK_TAGS.find(t=>t.value===f.tag)?.label||f.tag}</div><div style={{fontSize:10,color:"#9A8A72",marginTop:1,fontFamily:"'IBM Plex Mono',monospace"}}>{f.txHash?.slice(0,18)}…</div></div><div style={{fontSize:10,color:"#5A8A5A",background:"#E6EEE3",padding:"2px 6px",borderRadius:4}}>Verified</div></div>)}
     </div>
     <div style={{background:"#0a0f08",border:"1px solid #162410",borderRadius:9,padding:"9px 12px",marginBottom:16}}><div style={{display:"flex",gap:8,alignItems:"flex-start"}}><span style={{fontSize:13,flexShrink:0}}>⬡</span><div style={{fontSize:11.5,color:"#2a4a28",lineHeight:1.6}}>Reputation is recorded by job clients — not by you. This is enforced at the contract level by ERC-8004.</div></div></div>
-    <button className="btn-pri" onClick={onBrowseJobs} style={{width:"100%",padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Browse Open Jobs →</button>
+    <button className="btn-pri" onClick={onBrowseJobs} style={{width:"100%",padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Browse Open Jobs →</button>
   </div>);
 }
 
@@ -1565,15 +1565,15 @@ export function Marketplace() {
 }
 
   return (
-    <div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#09090f",color:"#e6e8f0",minHeight:"100vh",display:"flex",flexDirection:"column",position:"relative"}}>
+    <div style={{fontFamily:"'DM Sans',system-ui,sans-serif",background:"#F5F0E8",color:"#1A1712",minHeight:"100vh",display:"flex",flexDirection:"column",position:"relative"}}>
       <style>{CSS}</style>
 
       {/* ── MODALS ── */}
       {/* Toast notification */}
       {toast && (
-        <div className="fade-in" style={{position:'fixed',bottom:isMobile?80:24,right:24,zIndex:300,background:toast.type==='error'?'#1c0808':toast.type==='success'?'#061a10':'#0d0f1a',border:`1px solid ${toast.type==='error'?'#3a1010':toast.type==='success'?'#0f3a20':'#1e2238'}`,borderRadius:12,padding:'12px 16px',display:'flex',alignItems:'center',gap:10,maxWidth:320,boxShadow:'0 8px 32px rgba(0,0,0,0.4)'}}>
-          <div style={{width:8,height:8,borderRadius:'50%',background:toast.type==='error'?'#ef4444':toast.type==='success'?'#22c55e':'#6b7fff',flexShrink:0,animation:toast.type==='info'?'pulse 1.5s ease infinite':'none'}}/>
-          <span style={{fontSize:13,color:toast.type==='error'?'#f87171':toast.type==='success'?'#4ade80':'#e6e8f0',fontFamily:"'DM Sans', sans-serif",lineHeight:1.4}}>{toast.message}</span>
+        <div className="fade-in" style={{position:'fixed',bottom:isMobile?80:24,right:24,zIndex:300,background:toast.type==='error'?'#F5E4E0':toast.type==='success'?'#E6EEE3':'#FDFBF6',border:`1px solid ${toast.type==='error'?'#D8B8AC':toast.type==='success'?'#B8CDB4':'#C8BFA8'}`,borderRadius:12,padding:'12px 16px',display:'flex',alignItems:'center',gap:10,maxWidth:320,boxShadow:'0 8px 32px rgba(0,0,0,0.4)'}}>
+          <div style={{width:8,height:8,borderRadius:'50%',background:toast.type==='error'?'#A85440':toast.type==='success'?'#5A8A5A':'#1A1712',flexShrink:0,animation:toast.type==='info'?'pulse 1.5s ease infinite':'none'}}/>
+          <span style={{fontSize:13,color:toast.type==='error'?'#A85440':toast.type==='success'?'#5A8A5A':'#1A1712',fontFamily:"'DM Sans', sans-serif",lineHeight:1.4}}>{toast.message}</span>
         </div>
       )}
       {anyModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.78)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:16}}>
@@ -1585,14 +1585,14 @@ export function Marketplace() {
       </div>}
 
       {/* ── HEADER ── */}
-      <header style={{height:54,borderBottom:"1px solid #14162a",display:"flex",alignItems:"center",padding:"0 20px",gap:12,flexShrink:0,zIndex:10}}>
-        <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:19,color:"#fff",letterSpacing:"-0.5px"}}>CONACT</div>
-        <div style={{fontSize:10,background:"#061a2a",color:"#38bdf8",padding:"2px 7px",borderRadius:4,fontFamily:"'JetBrains Mono',monospace",border:"1px solid #0d3050",letterSpacing:.5}}>TESTNET</div>
-        {!isMobile && <div style={{fontSize:11,color:"#4a4d66",fontFamily:"'DM Sans',sans-serif",letterSpacing:0.3}}>Post jobs · Hire AI agents · Settle in USDC</div>}
+      <header style={{height:54,borderBottom:"1px solid #C8BFA8",display:"flex",alignItems:"center",padding:"0 20px",gap:12,flexShrink:0,zIndex:10}}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:19,color:"#1A1712",letterSpacing:"-0.5px"}}>CONACT</div>
+        <div style={{fontSize:10,background:"#E4EDE6",color:"#5A7A6A",padding:"2px 7px",borderRadius:4,fontFamily:"'IBM Plex Mono',monospace",border:"1px solid #B8C8BC",letterSpacing:.5}}>TESTNET</div>
+        {!isMobile && <div style={{fontSize:11,color:"#9A8A72",fontFamily:"'Inter',sans-serif",letterSpacing:0.3}}>Post jobs · Hire AI agents · Settle in USDC</div>}
 
         <div style={{flex:1}}/>
         <div style={{display:"flex",gap:18,alignItems:"center"}}>
-          {!isMobile && <div style={{width:1,height:24,background:"#14162a"}}/>}
+          {!isMobile && <div style={{width:1,height:24,background:"#C8BFA8"}}/>}
           <ConnectButton />
         </div>
       </header>
@@ -1603,8 +1603,8 @@ export function Marketplace() {
         {/* ── SIDEBAR ── */}
         <aside style={{
           width: isMobile ? '100%' : 210,
-          borderRight: isMobile ? 'none' : '1px solid #14162a',
-          borderTop: isMobile ? '1px solid #14162a' : 'none',
+          borderRight: isMobile ? 'none' : '1px solid #C8BFA8',
+          borderTop: isMobile ? '1px solid #C8BFA8' : 'none',
           padding: isMobile ? '8px' : '14px 8px',
           display: isMobile ? 'none' : 'flex',
           flexDirection: 'column',
@@ -1615,28 +1615,28 @@ export function Marketplace() {
             {id:"jobs",    sym:"◈", label:"Browse Jobs",   badge:openCount},
             {id:"agents",  sym:"⬡", label:"Agents"},
             null,
-            {id:"evaluate",sym:"◎", label:"Evaluate",      badge:pendingEval||null, badgeColor:pendingEval?"#f59e0b":null, badgeBg:pendingEval?"#1c1408":null},
+            {id:"evaluate",sym:"◎", label:"Evaluate",      badge:pendingEval||null, badgeColor:pendingEval?"#B07A2A":null, badgeBg:pendingEval?"#F5EBD8":null},
             {id:"myjobs",  sym:"▤", label:"My Jobs"},
-            {id:"myagent", sym:"◉", label:"My Agent",      badge:myAgent?"✓":null, badgeColor:myAgent?"#22c55e":null, badgeBg:myAgent?"#061a10":null},
+            {id:"myagent", sym:"◉", label:"My Agent",      badge:myAgent?"✓":null, badgeColor:myAgent?"#5A8A5A":null, badgeBg:myAgent?"#E6EEE3":null},
           ].map((item,i)=>item===null?(
-            <div key={i} style={{height:1,background:"#14162a",margin:"6px 8px"}}/>
+            <div key={i} style={{height:1,background:"#C8BFA8",margin:"6px 8px"}}/>
           ):(
             <button key={item.id} className={`nav-item ${view===item.id&&!showPost?"active":""}`}
               onClick={()=>{setView(item.id);setSel(null);setShowPost(false);setPostDone(false);}}
-              style={{display:"flex",alignItems:"center",gap:9,padding:"9px 11px",borderRadius:7,border:"none",background:"transparent",color:view===item.id&&!showPost?"#e6e8f0":"#5c5f7a",cursor:"pointer",fontSize:13.5,fontFamily:"'DM Sans',sans-serif",textAlign:"left",width:"100%"}}>
-              <span style={{fontSize:14,width:17,textAlign:"center",color:view===item.id&&!showPost?"#6b7fff":"#3a3d58"}}>{item.sym}</span>
+              style={{display:"flex",alignItems:"center",gap:9,padding:"9px 11px",borderRadius:7,border:"none",background:"transparent",color:view===item.id&&!showPost?"#1A1712":"#7A6A52",cursor:"pointer",fontSize:13.5,fontFamily:"'Inter',sans-serif",textAlign:"left",width:"100%"}}>
+              <span style={{fontSize:14,width:17,textAlign:"center",color:view===item.id&&!showPost?"#1A1712":"#9A8A72"}}>{item.sym}</span>
               <span style={{flex:1}}>{item.label}</span>
-              {item.badge&&<span style={{fontSize:11,background:item.badgeBg||"#12153a",color:item.badgeColor||"#6b7fff",padding:"1px 6px",borderRadius:10}}>{item.badge}</span>}
+              {item.badge&&<span style={{fontSize:11,background:item.badgeBg||"#EDE8DC",color:item.badgeColor||"#1A1712",padding:"1px 6px",borderRadius:10}}>{item.badge}</span>}
             </button>
           ))}
           <div style={{flex:1}}/>
-          <button className="btn-pri" onClick={()=>{setShowPost(true);setPostDone(false);setSel(null);}} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",borderRadius:8,border:"1px solid #252a68",background:"#12153a",color:"#6b7fff",fontSize:13.5,fontFamily:"'DM Sans',sans-serif",fontWeight:500,margin:"0 4px",cursor:"pointer"}}>
+          <button className="btn-pri" onClick={()=>{setShowPost(true);setPostDone(false);setSel(null);}} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"10px",borderRadius:8,border:"1px solid #C8BFA8",background:"#EDE8DC",color:"#1A1712",fontSize:13.5,fontFamily:"'Inter',sans-serif",fontWeight:500,margin:"0 4px",cursor:"pointer"}}>
             <span style={{fontSize:16,lineHeight:1,marginTop:-1}}>+</span> Post a Job
           </button>
-          <div style={{marginTop:10,padding:"10px 11px",background:"#0a0b14",borderRadius:8,border:"1px solid #14162a"}}>
-            <div style={{fontSize:10,color:"#3a3d58",marginBottom:3,fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>BUILT ON</div>
-            <div style={{fontSize:12,fontWeight:600,color:"#8085a8",letterSpacing:1}}>ARC NETWORK</div>
-            <div style={{fontSize:10,color:"#3a3d58",marginTop:2,fontFamily:"'JetBrains Mono',monospace"}}>ERC-8004 · ERC-8183</div>
+          <div style={{marginTop:10,padding:"10px 11px",background:"#EDE8DC",borderRadius:8,border:"1px solid #C8BFA8"}}>
+            <div style={{fontSize:10,color:"#9A8A72",marginBottom:3,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5}}>BUILT ON</div>
+            <div style={{fontSize:12,fontWeight:600,color:"#6A5E4A",letterSpacing:1}}>ARC NETWORK</div>
+            <div style={{fontSize:10,color:"#9A8A72",marginTop:2,fontFamily:"'IBM Plex Mono',monospace"}}>ERC-8004 · ERC-8183</div>
           </div>
         </aside>
 
@@ -1648,8 +1648,8 @@ export function Marketplace() {
             left: 0,
             right: 0,
             height: 60,
-            background: '#09090f',
-            borderTop: '1px solid #14162a',
+            background: '#F5F0E8',
+            borderTop: '1px solid #C8BFA8',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-around',
@@ -1674,7 +1674,7 @@ export function Marketplace() {
                   cursor: 'pointer',
                   padding: '8px 16px',
                   borderRadius: 8,
-                  color: view === item.id ? '#6b7fff' : '#5c5f7a',
+                  color: view === item.id ? '#1A1712' : '#7A6A52',
                 }}>
                 <span style={{ fontSize: 18 }}>{item.sym}</span>
                 <span style={{ fontSize: 10, fontFamily: "'DM Sans', sans-serif" }}>{item.label}</span>
@@ -1692,7 +1692,7 @@ export function Marketplace() {
                 cursor: 'pointer',
                 padding: '8px 16px',
                 borderRadius: 8,
-                color: '#6b7fff',
+                color: '#1A1712',
               }}>
               <span style={{ fontSize: 18 }}>+</span>
               <span style={{ fontSize: 10, fontFamily: "'DM Sans', sans-serif" }}>Post</span>
@@ -1712,43 +1712,43 @@ export function Marketplace() {
           {!showPost&&view==="myagent"&&(myAgent?<AgentDashboard agent={myAgent} feedbackHistory={feedbackHistory} activeJobs={activeJobs} deliverableMap={deliverableMap} onBrowseJobs={()=>setView("jobs")} onSubmitDeliverable={setSubmitJob}/>:<AgentRegistration onRegistered={handleAgentRegistered}/>)}
 
           {/* AGENTS DIR */}
-          {!showPost&&view==="agents"&&<div style={{padding:"22px 24px"}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:3}}>Registered Agents</h1><p style={{fontSize:13,color:"#5c5f7a"}}>{realAgents.length > 0 ? realAgents.length : AGENTS.length} agents with onchain identity on Arc</p></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(255px,1fr))",gap:10}}>{(realAgents.length > 0 ? realAgents : AGENTS).map((agent:any)=><div key={agent.id} className="agent-card" style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:11,padding:15}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:33,height:33,borderRadius:8,background:cb(agent.capabilities[0]),border:`1px solid ${cc(agent.capabilities[0])}30`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:11,color:cc(agent.capabilities[0])}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:13.5,color:"#e6e8f0"}}>{agent.name}</div><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#3a3d58",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:20,color:sc(agent.score),lineHeight:1}}>{agent.score}</div><div style={{fontSize:9,color:"#3a3d58",marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>REP</div></div></div><div style={{display:"flex",gap:5,marginBottom:11,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>{[{l:"JOBS",v:agent.completed},{l:"SUCCESS",v:agent.successRate+"%"},{l:"AVG",v:agent.avgTime}].map(s=><div key={s.l} style={{background:"#080910",borderRadius:6,padding:"7px",textAlign:"center"}}><div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:500,color:"#b0b4cc"}}>{s.v}</div><div style={{fontSize:9,color:"#3a3d58",marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{s.l}</div></div>)}</div><div style={{marginTop:10,paddingTop:9,borderTop:"1px solid #14162a",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#3a5a7a"}}>Total earned</span><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:"#2775ca",fontWeight:500}}>{agent.earned.toLocaleString()} USDC</span></div></div>)}</div></div>}
+          {!showPost&&view==="agents"&&<div style={{padding:"22px 24px"}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:19,fontWeight:700,color:"#1A1712",letterSpacing:"-0.5px",marginBottom:3}}>Registered Agents</h1><p style={{fontSize:13,color:"#7A6A52"}}>{realAgents.length > 0 ? realAgents.length : AGENTS.length} agents with onchain identity on Arc</p></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(255px,1fr))",gap:10}}>{(realAgents.length > 0 ? realAgents : AGENTS).map((agent:any)=><div key={agent.id} className="agent-card" style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:11,padding:15}}><div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:11}}><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:33,height:33,borderRadius:8,background:cb(agent.capabilities[0]),border:`1px solid ${cc(agent.capabilities[0])}30`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:11,color:cc(agent.capabilities[0])}}>{agent.name.slice(0,2).toUpperCase()}</div><div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:13.5,color:"#1A1712"}}>{agent.name}</div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:10,color:"#9A8A72",marginTop:1}}>{trim(agent.wallet_address || agent.address || '0x0000')}</div></div></div><div style={{textAlign:"right"}}><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:20,color:sc(agent.score),lineHeight:1}}>{agent.score}</div><div style={{fontSize:9,color:"#9A8A72",marginTop:1,fontFamily:"'IBM Plex Mono',monospace"}}>REP</div></div></div><div style={{display:"flex",gap:5,marginBottom:11,flexWrap:"wrap"}}>{agent.capabilities.map(cap=><span key={cap} style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(cap),color:cc(cap),border:`1px solid ${cc(cap)}25`}}>{cap}</span>)}</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>{[{l:"JOBS",v:agent.completed},{l:"SUCCESS",v:agent.successRate+"%"},{l:"AVG",v:agent.avgTime}].map(s=><div key={s.l} style={{background:"#EDE8DC",borderRadius:6,padding:"7px",textAlign:"center"}}><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12,fontWeight:500,color:"#b0b4cc"}}>{s.v}</div><div style={{fontSize:9,color:"#9A8A72",marginTop:1,fontFamily:"'IBM Plex Mono',monospace"}}>{s.l}</div></div>)}</div><div style={{marginTop:10,paddingTop:9,borderTop:"1px solid #C8BFA8",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#7A6A52"}}>Total earned</span><span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12,color:"#7A6A52",fontWeight:500}}>{agent.earned.toLocaleString()} USDC</span></div></div>)}</div></div>}
 
           {/* JOBS + DETAIL */}
           {!showPost&&view==="jobs"&&<div style={{display:"flex",flex:1,overflow:"hidden"}}>
             <div style={{flex:1,overflow:"auto",padding:"20px 22px"}}>
-              <div style={{marginBottom:15}}><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:2}}>Open Jobs</h1><p style={{fontSize:13,color:"#5c5f7a"}}>{jobs.length} jobs on Arc testnet</p></div>
-              <div style={{display:"flex",gap:5,marginBottom:14,flexWrap:"wrap"}}>{CATS.map(c=><button key={c} className={`cat-btn ${cat===c?"on":""}`} onClick={()=>{setCat(c);setSel(null);}} style={{fontSize:12,padding:"5px 10px",borderRadius:6,border:"1px solid #1a1e30",background:"transparent",color:"#6b6e88",fontFamily:"'DM Sans',sans-serif"}}>{c}</button>)}</div>
-              <div style={{display:"flex",flexDirection:"column",gap:7}}>{jobs.map(job=>{const ef=jobStatus(job);const ss=statusSty(ef);const isApplied=appliedJobs.has(job.id);return(<div key={job.id} className={`job-card ${sel?.id===job.id?"sel":""}`} onClick={()=>setSel(sel?.id===job.id?null:job)} style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"12px 14px",cursor:"pointer"}}><div style={{display:"flex",alignItems:"flex-start",gap:10}}><div style={{flex:1,minWidth:0}}><div style={{display:"flex",gap:5,marginBottom:5,flexWrap:"wrap"}}><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(job.category),color:cc(job.category),fontWeight:500}}>{job.category}</span><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:ss.bg,color:ss.color}}>{statusLabel(ef)}</span>{isApplied&&<span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20"}}>Applied ✓</span>}</div><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:14,color:"#e6e8f0",marginBottom:4,lineHeight:1.3}}>{job.title}</div><div style={{display:"flex",gap:11,flexWrap:"wrap"}}><span style={{fontSize:11,color:"#5c5f7a"}}>⏰ {job.deadline}</span><span style={{fontSize:11,color:"#5c5f7a"}}>{job.applicants} applied</span><span style={{fontSize:10.5,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace"}}>{trim(job.poster)}</span></div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#fff",lineHeight:1}}>{job.budget}</div><div style={{fontSize:10.5,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace",marginTop:2}}>USDC</div></div></div></div>);})}</div>
+              <div style={{marginBottom:15}}><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:19,fontWeight:700,color:"#1A1712",letterSpacing:"-0.5px",marginBottom:2}}>Open Jobs</h1><p style={{fontSize:13,color:"#7A6A52"}}>{jobs.length} jobs on Arc testnet</p></div>
+              <div style={{display:"flex",gap:5,marginBottom:14,flexWrap:"wrap"}}>{CATS.map(c=><button key={c} className={`cat-btn ${cat===c?"on":""}`} onClick={()=>{setCat(c);setSel(null);}} style={{fontSize:12,padding:"5px 10px",borderRadius:6,border:"1px solid #C8BFA8",background:"transparent",color:"#7A6A52",fontFamily:"'Inter',sans-serif"}}>{c}</button>)}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:0}}>{jobs.map(job=>{const ef=jobStatus(job);const ss=statusSty(ef);const isApplied=appliedJobs.has(job.id);return(<div key={job.id} className={`job-card ${sel?.id===job.id?"sel":""}`} onClick={()=>setSel(sel?.id===job.id?null:job)} style={{background:"transparent",borderBottom:"1px solid #C8BFA8",borderRadius:0,padding:"18px 4px",cursor:"pointer"}}><div style={{display:"flex",alignItems:"flex-start",gap:10}}><div style={{flex:1,minWidth:0}}><div style={{display:"flex",gap:5,marginBottom:5,flexWrap:"wrap"}}><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(job.category),color:cc(job.category),fontWeight:500}}>{job.category}</span><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:ss.bg,color:ss.color}}>{statusLabel(ef)}</span>{isApplied&&<span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:"#E6EEE3",color:"#5A8A5A",border:"1px solid #B8CDB4"}}>Applied ✓</span>}</div><div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:14,color:"#1A1712",marginBottom:4,lineHeight:1.3}}>{job.title}</div><div style={{display:"flex",gap:11,flexWrap:"wrap"}}><span style={{fontSize:11,color:"#7A6A52"}}>⏰ {job.deadline}</span><span style={{fontSize:11,color:"#7A6A52"}}>{job.applicants} applied</span><span style={{fontSize:10.5,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace"}}>{trim(job.poster)}</span></div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:18,color:"#1A1712",lineHeight:1}}>{job.budget}</div><div style={{fontSize:10.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",marginTop:2}}>USDC</div></div></div></div>);})}</div>
             </div>
             {sel&&(()=>{const ef=jobStatus(sel);const ss=statusSty(ef);const isApplied=appliedJobs.has(sel.id);const isComp=ef==="completed";const isRej=ef==="rejected";const isSubmitted=ef==="submitted";
-              return<div style={{width:338,borderLeft:"1px solid #14162a",overflow:"auto",padding:18,flexShrink:0,background:"#080910"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:13}}><span style={{fontSize:10.5,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace"}}>JOB DETAIL</span><button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:"#4a4d66",cursor:"pointer",fontSize:18,lineHeight:1,padding:0}}>×</button></div>
-                <div style={{display:"flex",gap:5,marginBottom:10,flexWrap:"wrap"}}><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(sel.category),color:cc(sel.category),fontWeight:500}}>{sel.category}</span><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:ss.bg,color:ss.color}}>{statusLabel(ef)}</span>{isApplied&&<span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20"}}>Applied ✓</span>}</div>
-                <h2 style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:15,color:"#fff",letterSpacing:"-0.3px",marginBottom:12,lineHeight:1.35}}>{sel.title}</h2>
-                {isSubmitted&&<div style={{background:"#041c2a",border:"1px solid #0d3050",borderRadius:9,padding:"10px 12px",marginBottom:12}}><div style={{fontSize:10,color:"#3a7a9a",fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5,marginBottom:5}}>DELIVERABLE SUBMITTED</div><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:9}}><div style={{width:25,height:25,borderRadius:6,background:cb(sel.category),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:9,color:cc(sel.category)}}>{(sel.provider?.name||"AG").slice(0,2)}</div><div><div style={{fontSize:12.5,color:"#e6e8f0",fontWeight:500}}>{sel.provider?.name}</div></div></div><div style={{display:"flex",gap:7}}><button className="btn-approve" onClick={()=>setCompleteJob(sel)} style={{flex:1,padding:"8px",borderRadius:7,background:"#061a10",color:"#22c55e",border:"1px solid #0f3a20",fontSize:12,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Approve →</button><button className="btn-danger" onClick={()=>setRejectJob(sel)} style={{padding:"8px 11px",borderRadius:7,background:"#0d0608",color:"#7a3a3a",border:"1px solid #2a0a0a",fontSize:12,cursor:"pointer"}}>Reject</button></div></div>}
-                {(isComp||isRej)&&<div style={{background:isComp?"#061a10":"#1c0808",border:`1px solid ${isComp?"#0f3a20":"#3a1010"}`,borderRadius:9,padding:"10px 12px",marginBottom:12}}><div style={{fontSize:12,color:isComp?"#22c55e":"#ef4444",fontWeight:600}}>{isComp?"Completed · USDC released":"Rejected · USDC refunded"}</div></div>}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}}>{[{l:"BUDGET",v:`${sel.budget} USDC`,c:"#2775ca",mono:true},{l:"DEADLINE",v:sel.deadline,c:"#c0c4de"},{l:"APPLICANTS",v:`${sel.applicants}`,c:"#c0c4de"},{l:"EVALUATOR",v:sel.evaluator,c:"#c0c4de"}].map(s=><div key={s.l} style={{background:"#0d0f1a",borderRadius:7,padding:"8px 9px",border:"1px solid #1a1e30"}}><div style={{fontSize:9,color:"#3a3d58",fontFamily:"'JetBrains Mono',monospace",marginBottom:3,letterSpacing:.4}}>{s.l}</div><div style={{fontSize:11.5,fontWeight:500,color:s.c,fontFamily:s.mono?"'JetBrains Mono',monospace":"inherit",lineHeight:1.3}}>{s.v}</div></div>)}</div>
-                <div style={{marginBottom:12}}><div style={{fontSize:9.5,color:"#3a3d58",marginBottom:5,fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>DESCRIPTION</div><p style={{fontSize:12.5,color:"#9095b0",lineHeight:1.7}}>{sel.description}</p></div>
-                <div style={{marginBottom:12,background:"#060d1c",borderRadius:9,padding:"10px 12px",border:"1px solid #0d1e40"}}><div style={{fontSize:9.5,color:"#3a5a7a",marginBottom:5,fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>ESCROW</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:"#5a7a9a"}}>Locked on Arc</span><span style={{fontFamily:"'JetBrains Mono',monospace",color:"#38bdf8",fontSize:13,fontWeight:500}}>{sel.budget} USDC</span></div></div>
-                {!isSubmitted&&!isComp&&!isRej&&(isApplied?<div style={{padding:"10px",borderRadius:9,background:"#061a10",border:"1px solid #0f3a20",fontSize:12.5,fontFamily:"'Outfit',sans-serif",fontWeight:600,color:"#22c55e",textAlign:"center"}}>Applied ✓</div>:myAgent?<button className="btn-pri" onClick={()=>setApplyJob(sel)} style={{width:"100%",padding:"10px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Apply as Agent →</button>:<button className="btn-sec" onClick={()=>{setSel(null);setView("myagent");}} style={{width:"100%",padding:"10px",borderRadius:9,background:"transparent",color:"#6b6e88",border:"1px solid #1e2238",fontSize:12.5,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>Register agent to apply →</button>)}
-                <div style={{marginTop:8,textAlign:"center",fontSize:10,color:"#2a2d48",fontFamily:"'JetBrains Mono',monospace"}}>ERC-8183 · {trim(sel.poster)}</div>
+              return<div style={{width:338,borderLeft:"1px solid #C8BFA8",overflow:"auto",padding:18,flexShrink:0,background:"#EDE8DC"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:13}}><span style={{fontSize:10.5,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace"}}>JOB DETAIL</span><button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:"#9A8A72",cursor:"pointer",fontSize:18,lineHeight:1,padding:0}}>×</button></div>
+                <div style={{display:"flex",gap:5,marginBottom:10,flexWrap:"wrap"}}><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(sel.category),color:cc(sel.category),fontWeight:500}}>{sel.category}</span><span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:ss.bg,color:ss.color}}>{statusLabel(ef)}</span>{isApplied&&<span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:"#E6EEE3",color:"#5A8A5A",border:"1px solid #B8CDB4"}}>Applied ✓</span>}</div>
+                <h2 style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:15,color:"#1A1712",letterSpacing:"-0.3px",marginBottom:12,lineHeight:1.35}}>{sel.title}</h2>
+                {isSubmitted&&<div style={{background:"#E4EDE6",border:"1px solid #B8C8BC",borderRadius:9,padding:"10px 12px",marginBottom:12}}><div style={{fontSize:10,color:"#3a7a9a",fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,marginBottom:5}}>DELIVERABLE SUBMITTED</div><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:9}}><div style={{width:25,height:25,borderRadius:6,background:cb(sel.category),display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:9,color:cc(sel.category)}}>{(sel.provider?.name||"AG").slice(0,2)}</div><div><div style={{fontSize:12.5,color:"#1A1712",fontWeight:500}}>{sel.provider?.name}</div></div></div><div style={{display:"flex",gap:7}}><button className="btn-approve" onClick={()=>setCompleteJob(sel)} style={{flex:1,padding:"8px",borderRadius:7,background:"#E6EEE3",color:"#5A8A5A",border:"1px solid #B8CDB4",fontSize:12,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Approve →</button><button className="btn-danger" onClick={()=>setRejectJob(sel)} style={{padding:"8px 11px",borderRadius:7,background:"#0d0608",color:"#7a3a3a",border:"1px solid #2a0a0a",fontSize:12,cursor:"pointer"}}>Reject</button></div></div>}
+                {(isComp||isRej)&&<div style={{background:isComp?"#E6EEE3":"#F5E4E0",border:`1px solid ${isComp?"#B8CDB4":"#D8B8AC"}`,borderRadius:9,padding:"10px 12px",marginBottom:12}}><div style={{fontSize:12,color:isComp?"#5A8A5A":"#A85440",fontWeight:600}}>{isComp?"Completed · USDC released":"Rejected · USDC refunded"}</div></div>}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:12}}>{[{l:"BUDGET",v:`${sel.budget} USDC`,c:"#7A6A52",mono:true},{l:"DEADLINE",v:sel.deadline,c:"#1A1712"},{l:"APPLICANTS",v:`${sel.applicants}`,c:"#1A1712"},{l:"EVALUATOR",v:sel.evaluator,c:"#1A1712"}].map(s=><div key={s.l} style={{background:"#FDFBF6",borderRadius:7,padding:"8px 9px",border:"1px solid #C8BFA8"}}><div style={{fontSize:9,color:"#9A8A72",fontFamily:"'IBM Plex Mono',monospace",marginBottom:3,letterSpacing:.4}}>{s.l}</div><div style={{fontSize:11.5,fontWeight:500,color:s.c,fontFamily:s.mono?"'IBM Plex Mono',monospace":"inherit",lineHeight:1.3}}>{s.v}</div></div>)}</div>
+                <div style={{marginBottom:12}}><div style={{fontSize:9.5,color:"#9A8A72",marginBottom:5,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5}}>DESCRIPTION</div><p style={{fontSize:12.5,color:"#4A4133",lineHeight:1.7}}>{sel.description}</p></div>
+                <div style={{marginBottom:12,background:"#EDE8DC",borderRadius:9,padding:"10px 12px",border:"1px solid #C8BFA8"}}><div style={{fontSize:9.5,color:"#7A6A52",marginBottom:5,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5}}>ESCROW</div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:"#6A5E4A"}}>Locked on Arc</span><span style={{fontFamily:"'IBM Plex Mono',monospace",color:"#5A7A6A",fontSize:13,fontWeight:500}}>{sel.budget} USDC</span></div></div>
+                {!isSubmitted&&!isComp&&!isRej&&(isApplied?<div style={{padding:"10px",borderRadius:9,background:"#E6EEE3",border:"1px solid #B8CDB4",fontSize:12.5,fontFamily:"'Playfair Display',serif",fontWeight:600,color:"#5A8A5A",textAlign:"center"}}>Applied ✓</div>:myAgent?<button className="btn-pri" onClick={()=>setApplyJob(sel)} style={{width:"100%",padding:"10px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Apply as Agent →</button>:<button className="btn-sec" onClick={()=>{setSel(null);setView("myagent");}} style={{width:"100%",padding:"10px",borderRadius:9,background:"transparent",color:"#7A6A52",border:"1px solid #C8BFA8",fontSize:12.5,fontFamily:"'Inter',sans-serif",cursor:"pointer"}}>Register agent to apply →</button>)}
+                <div style={{marginTop:8,textAlign:"center",fontSize:10,color:"#B5AB94",fontFamily:"'IBM Plex Mono',monospace"}}>ERC-8183 · {trim(sel.poster)}</div>
               </div>;
             })()}
           </div>}
 
           {/* POST JOB */}
           {showPost&&<div style={{padding:"24px 28px",maxWidth:560}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}><button className="btn-sec" onClick={()=>setShowPost(false)} style={{background:"none",border:"none",color:"#5c5f7a",cursor:"pointer",fontSize:13,fontFamily:"inherit",padding:0}}>← Back</button><div style={{width:1,height:14,background:"#1e2238"}}/><h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:18,fontWeight:700,color:"#fff",letterSpacing:"-0.5px"}}>Post a Job</h1></div>
-            {postDone?<div style={{textAlign:"center",padding:"44px 24px",background:"#061a10",borderRadius:14,border:"1px solid #0f3a1e"}}><div style={{fontSize:30,marginBottom:10,color:"#22c55e"}}>✓</div><div style={{fontFamily:"'Outfit',sans-serif",fontSize:15,fontWeight:700,color:"#22c55e",marginBottom:4}}>Job posted to Arc</div><button className="btn-pri" onClick={()=>{setPostDone(false);setShowPost(false);setForm({title:"",category:"Writing",budget:"",deadline:"",description:"",evaluator:"Manual review"});}} style={{marginTop:14,padding:"9px 20px",borderRadius:8,background:"#6b7fff",color:"#fff",border:"none",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Back to Jobs</button></div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}><button className="btn-sec" onClick={()=>setShowPost(false)} style={{background:"none",border:"none",color:"#7A6A52",cursor:"pointer",fontSize:13,fontFamily:"inherit",padding:0}}>← Back</button><div style={{width:1,height:14,background:"#C8BFA8"}}/><h1 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:"#1A1712",letterSpacing:"-0.5px"}}>Post a Job</h1></div>
+            {postDone?<div style={{textAlign:"center",padding:"44px 24px",background:"#E6EEE3",borderRadius:14,border:"1px solid #0f3a1e"}}><div style={{fontSize:30,marginBottom:10,color:"#5A8A5A"}}>✓</div><div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:"#5A8A5A",marginBottom:4}}>Job posted to Arc</div><button className="btn-pri" onClick={()=>{setPostDone(false);setShowPost(false);setForm({title:"",category:"Writing",budget:"",deadline:"",description:"",evaluator:"Manual review"});}} style={{marginTop:14,padding:"9px 20px",borderRadius:8,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Back to Jobs</button></div>
             :<div style={{display:"flex",flexDirection:"column",gap:14}}>
-              <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Job title</label><input value={form.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Weekly newsletter for SaaS publication"/></div>
-              <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:12}}><div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Category</label><select value={form.category} onChange={e=>upd("category",e.target.value)}>{["Writing","Curation","Research","Analysis","Social Copy","Summarisation"].map(c=><option key={c}>{c}</option>)}</select></div><div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Budget (USDC)</label><input type="number" min="1" value={form.budget} onChange={e=>upd("budget",e.target.value)} placeholder="e.g. 150"/></div></div>
-              <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Deadline</label><input value={form.deadline} onChange={e=>upd("deadline",e.target.value)} placeholder="e.g. 2d 8h"/></div>
-              <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Description</label><textarea value={form.description} onChange={e=>upd("description",e.target.value)} placeholder="Output format, tone, word count…" style={{minHeight:80}}/></div>
-              <div><label style={{fontSize:12.5,color:"#6b6e88",display:"block",marginBottom:5}}>Evaluator</label><select value={form.evaluator} onChange={e=>upd("evaluator",e.target.value)}>{["Manual review","AI validator","Automated","AI validator + Manual"].map(e=><option key={e}>{e}</option>)}</select></div>
-              {budgetNum>0&&<div style={{background:"#060d1c",border:"1px solid #0d1e40",borderRadius:9,padding:"12px 14px"}}><div style={{fontSize:9.5,color:"#3a5a7a",marginBottom:7,fontFamily:"'JetBrains Mono',monospace",letterSpacing:.5}}>ESCROW SUMMARY</div>{[{label:"Job payment",val:`${budgetNum} USDC`,c:"#2775ca"},{label:"Platform fee (2%)",val:`${(budgetNum*.02).toFixed(2)} USDC`,c:"#3a5a7a"}].map(r=><div key={r.label} style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12.5,color:"#5a7a9a"}}>{r.label}</span><span style={{fontFamily:"'JetBrains Mono',monospace",color:r.c,fontSize:13}}>{r.val}</span></div>)}<div style={{borderTop:"1px solid #0d1e40",marginTop:7,paddingTop:8,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,color:"#8ab0d0",fontWeight:500}}>Total to escrow</span><span style={{fontFamily:"'JetBrains Mono',monospace",color:"#38bdf8",fontSize:14,fontWeight:500}}>{(budgetNum*1.02).toFixed(2)} USDC</span></div></div>}
-              <button className="btn-pri" disabled={!canPost} onClick={handlePostJob} style={{padding:"11px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:600,opacity:canPost?1:.4,cursor:canPost?"pointer":"not-allowed"}}>Fund Escrow &amp; Post Job →</button>
+              <div><label style={{fontSize:12.5,color:"#7A6A52",display:"block",marginBottom:5}}>Job title</label><input value={form.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Weekly newsletter for SaaS publication"/></div>
+              <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:12}}><div><label style={{fontSize:12.5,color:"#7A6A52",display:"block",marginBottom:5}}>Category</label><select value={form.category} onChange={e=>upd("category",e.target.value)}>{["Writing","Curation","Research","Analysis","Social Copy","Summarisation"].map(c=><option key={c}>{c}</option>)}</select></div><div><label style={{fontSize:12.5,color:"#7A6A52",display:"block",marginBottom:5}}>Budget (USDC)</label><input type="number" min="1" value={form.budget} onChange={e=>upd("budget",e.target.value)} placeholder="e.g. 150"/></div></div>
+              <div><label style={{fontSize:12.5,color:"#7A6A52",display:"block",marginBottom:5}}>Deadline</label><input value={form.deadline} onChange={e=>upd("deadline",e.target.value)} placeholder="e.g. 2d 8h"/></div>
+              <div><label style={{fontSize:12.5,color:"#7A6A52",display:"block",marginBottom:5}}>Description</label><textarea value={form.description} onChange={e=>upd("description",e.target.value)} placeholder="Output format, tone, word count…" style={{minHeight:80}}/></div>
+              <div><label style={{fontSize:12.5,color:"#7A6A52",display:"block",marginBottom:5}}>Evaluator</label><select value={form.evaluator} onChange={e=>upd("evaluator",e.target.value)}>{["Manual review","AI validator","Automated","AI validator + Manual"].map(e=><option key={e}>{e}</option>)}</select></div>
+              {budgetNum>0&&<div style={{background:"#EDE8DC",border:"1px solid #C8BFA8",borderRadius:9,padding:"12px 14px"}}><div style={{fontSize:9.5,color:"#7A6A52",marginBottom:7,fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5}}>ESCROW SUMMARY</div>{[{label:"Job payment",val:`${budgetNum} USDC`,c:"#7A6A52"},{label:"Platform fee (2%)",val:`${(budgetNum*.02).toFixed(2)} USDC`,c:"#7A6A52"}].map(r=><div key={r.label} style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12.5,color:"#6A5E4A"}}>{r.label}</span><span style={{fontFamily:"'IBM Plex Mono',monospace",color:r.c,fontSize:13}}>{r.val}</span></div>)}<div style={{borderTop:"1px solid #C8BFA8",marginTop:7,paddingTop:8,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,color:"#8ab0d0",fontWeight:500}}>Total to escrow</span><span style={{fontFamily:"'IBM Plex Mono',monospace",color:"#5A7A6A",fontSize:14,fontWeight:500}}>{(budgetNum*1.02).toFixed(2)} USDC</span></div></div>}
+              <button className="btn-pri" disabled={!canPost} onClick={handlePostJob} style={{padding:"11px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:14,fontFamily:"'Playfair Display',serif",fontWeight:600,opacity:canPost?1:.4,cursor:canPost?"pointer":"not-allowed"}}>Fund Escrow &amp; Post Job →</button>
             </div>}
           </div>}
 
@@ -1756,16 +1756,16 @@ export function Marketplace() {
          {!showPost&&view==="myjobs"&&(
   <div style={{padding:"22px 24px",flex:1,overflow:"auto"}}>
     <div style={{marginBottom:18}}>
-      <h1 style={{fontFamily:"'Outfit',sans-serif",fontSize:19,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",marginBottom:3}}>My Jobs</h1>
-      <p style={{fontSize:13,color:"#5c5f7a"}}>
+      <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:19,fontWeight:700,color:"#1A1712",letterSpacing:"-0.5px",marginBottom:3}}>My Jobs</h1>
+      <p style={{fontSize:13,color:"#7A6A52"}}>
         {walletConnected ? `Jobs posted by ${trim(walletAddress||'')}` : 'Connect a wallet to view your jobs'}
       </p>
     </div>
 
     {!walletConnected ? (
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:9,padding:"60px 0"}}>
-        <div style={{fontSize:24,color:"#3a3d58"}}>▤</div>
-        <div style={{fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:600,color:"#5c5f7a"}}>Connect a wallet to view your jobs</div>
+        <div style={{fontSize:24,color:"#9A8A72"}}>▤</div>
+        <div style={{fontSize:14,fontFamily:"'Playfair Display',serif",fontWeight:600,color:"#7A6A52"}}>Connect a wallet to view your jobs</div>
       </div>
     ) : (()=>{
       const myJobs = realJobs.filter((j:any) => 
@@ -1774,9 +1774,9 @@ export function Marketplace() {
 
       if (myJobs.length === 0) return (
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:9,padding:"60px 0"}}>
-          <div style={{fontSize:24,color:"#3a3d58"}}>▤</div>
-          <div style={{fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:600,color:"#5c5f7a"}}>No jobs posted yet</div>
-          <button className="btn-pri" onClick={()=>setShowPost(true)} style={{padding:"10px 20px",borderRadius:9,background:"#6b7fff",color:"#fff",border:"none",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:600,cursor:"pointer"}}>Post your first job →</button>
+          <div style={{fontSize:24,color:"#9A8A72"}}>▤</div>
+          <div style={{fontSize:14,fontFamily:"'Playfair Display',serif",fontWeight:600,color:"#7A6A52"}}>No jobs posted yet</div>
+          <button className="btn-pri" onClick={()=>setShowPost(true)} style={{padding:"10px 20px",borderRadius:9,background:"#1A1712",color:"#F5F0E8",border:"none",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>Post your first job →</button>
         </div>
       )
 
@@ -1792,39 +1792,39 @@ export function Marketplace() {
               {l:"Completed", v:completedCount},
               {l:"USDC spent", v:totalSpent+" USDC"},
             ].map(s=>(
-              <div key={s.l} style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:9,padding:"10px 12px"}}>
-                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:500,color:"#c0c4de",marginBottom:2}}>{s.v}</div>
-                <div style={{fontSize:10.5,color:"#4a4d66"}}>{s.l}</div>
+              <div key={s.l} style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:9,padding:"10px 12px"}}>
+                <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:14,fontWeight:500,color:"#1A1712",marginBottom:2}}>{s.v}</div>
+                <div style={{fontSize:10.5,color:"#9A8A72"}}>{s.l}</div>
               </div>
             ))}
           </div>
 
           {/* Jobs list */}
-          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+          <div style={{display:"flex",flexDirection:"column",gap:0}}>
             {myJobs.map((job:any)=>{
               const ss = statusSty(job.status)
               return (
-                <div key={job.id} style={{background:"#0d0f1a",border:"1px solid #1a1e30",borderRadius:10,padding:"13px 15px"}}>
+                <div key={job.id} style={{background:"#FDFBF6",border:"1px solid #C8BFA8",borderRadius:10,padding:"13px 15px"}}>
                   <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
                     <div style={{flex:1}}>
                       <div style={{display:"flex",gap:5,marginBottom:5,flexWrap:"wrap"}}>
                         <span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:cb(job.category),color:cc(job.category),fontWeight:500}}>{job.category}</span>
                         <span style={{fontSize:11,padding:"2px 7px",borderRadius:4,background:ss.bg,color:ss.color}}>{statusLabel(job.status)}</span>
                       </div>
-                      <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:600,fontSize:14,color:"#e6e8f0",marginBottom:4,lineHeight:1.3}}>{job.title}</div>
-                      <div style={{fontSize:11,color:"#5c5f7a"}}>
+                      <div style={{fontFamily:"'Playfair Display',serif",fontWeight:600,fontSize:14,color:"#1A1712",marginBottom:4,lineHeight:1.3}}>{job.title}</div>
+                      <div style={{fontSize:11,color:"#7A6A52"}}>
                         {new Date(job.created_at).toLocaleDateString()} · {job.evaluator}
                       </div>
                     </div>
                     <div style={{textAlign:"right",flexShrink:0}}>
-                      <div style={{fontFamily:"'Outfit',sans-serif",fontWeight:700,fontSize:18,color:"#fff",lineHeight:1}}>{job.budget}</div>
-                      <div style={{fontSize:10.5,color:"#2775ca",fontFamily:"'JetBrains Mono',monospace",marginTop:2}}>USDC</div>
+                      <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:18,color:"#1A1712",lineHeight:1}}>{job.budget}</div>
+                      <div style={{fontSize:10.5,color:"#7A6A52",fontFamily:"'IBM Plex Mono',monospace",marginTop:2}}>USDC</div>
                     </div>
                   </div>
                   {job.deliverable_uri && (
-                    <div style={{marginTop:10,paddingTop:9,borderTop:"1px solid #14162a",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:11,color:"#3a5a7a"}}>Deliverable</span>
-                      <a href={`https://gateway.pinata.cloud/ipfs/${job.deliverable_uri.replace('ipfs://','')}`} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#38bdf8",textDecoration:"none"}}>View on IPFS ↗</a>
+                    <div style={{marginTop:10,paddingTop:9,borderTop:"1px solid #C8BFA8",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:11,color:"#7A6A52"}}>Deliverable</span>
+                      <a href={`https://gateway.pinata.cloud/ipfs/${job.deliverable_uri.replace('ipfs://','')}`} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#5A7A6A",textDecoration:"none"}}>View on IPFS ↗</a>
                     </div>
                   )}
                 </div>
@@ -1846,8 +1846,8 @@ export function MarketplaceApp() {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme({
-          accentColor: '#6b7fff',
+        <RainbowKitProvider theme={lightTheme({
+          accentColor: '#1A1712',
           accentColorForeground: 'white',
           borderRadius: 'medium',
         })}>
