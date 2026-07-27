@@ -1,0 +1,124 @@
+<template>
+  <style>
+    @font-face {
+      font-family: 'Playfair Display';
+      src: url('assets/fonts/PlayfairDisplay-var.woff2') format('woff2');
+      font-weight: 400 700;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('assets/fonts/Inter-var.woff2') format('woff2');
+      font-weight: 400 700;
+      font-style: normal;
+      font-display: block;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1080px;
+      overflow: hidden;
+    }
+
+    .f01-ground {
+      position: absolute;
+      inset: 0;
+      background: #F5F0E8;
+    }
+
+    .f01-stage {
+      position: absolute;
+      inset: 0;
+    }
+
+    .f01-line {
+      position: absolute;
+      left: 90px;
+      width: 900px;
+      top: 372px;
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+      color: #1A1712;
+      font-size: 78px;
+      line-height: 1.14;
+      letter-spacing: -1.5px;
+      text-align: left;
+    }
+
+    .f01-line .w {
+      display: inline-block;
+    }
+
+    /* beat 3 sits slightly larger and carries the stress on "who" */
+    #f01-l3 {
+      top: 348px;
+      font-size: 90px;
+      color: #7A6A52;
+    }
+
+    #f01-l3 .stress {
+      color: #1A1712;
+      font-weight: 700;
+    }
+
+    .f01-rule {
+      position: absolute;
+      left: 90px;
+      top: 606px;
+      height: 1px;
+      width: 620px;
+      background: #C8BFA8;
+      transform-origin: 0% 50%;
+    }
+  </style>
+
+  <div id="root" data-composition-id="01-who-settles-it" data-start="0" data-duration="3.9" data-width="1080" data-height="1080">
+    <div id="f01-ground" class="f01-ground clip" data-start="0" data-duration="3.9" data-track-index="0"></div>
+
+    <div id="f01-stage" class="f01-stage clip" data-start="0" data-duration="3.9" data-track-index="1">
+      <div class="f01-line" id="f01-l1"><span class="w">You</span> <span class="w">hired</span> <span class="w">an</span> <span class="w">agent.</span></div>
+      <div class="f01-line" id="f01-l2"><span class="w">It</span> <span class="w">delivered.</span></div>
+      <div class="f01-line" id="f01-l3">Now <span class="stress">who</span> says it&rsquo;s good?</div>
+      <div class="f01-rule" id="f01-rule"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      var l1 = document.querySelectorAll('#f01-l1 .w');
+
+      // start states — explicit, so a seek to t=0 lands correctly
+      gsap.set('#f01-l1', { autoAlpha: 1 });
+      gsap.set('#f01-l2', { autoAlpha: 0 });
+      gsap.set('#f01-l3', { autoAlpha: 0 });
+      gsap.set('#f01-rule', { scaleX: 0 });
+
+      // Scene 1 (0.0-1.05) — per-word staggered reveal, long-tail settle
+      tl.fromTo(
+        l1,
+        { autoAlpha: 0, y: 26 },
+        { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.075 },
+        0
+      );
+
+      // Scene 2 (1.05-1.95) — hard-cut flash swap, no fade: line 1 out / line 2 in on one frame
+      tl.set('#f01-l1', { autoAlpha: 0 }, 1.05);
+      tl.set('#f01-l2', { autoAlpha: 1 }, 1.05);
+
+      // Scene 3 (1.95-3.5) — hard cut to the question, then the hairline draws itself
+      tl.set('#f01-l2', { autoAlpha: 0 }, 1.95);
+      tl.set('#f01-l3', { autoAlpha: 1 }, 1.95);
+      tl.to('#f01-rule', { scaleX: 1, duration: 0.5, ease: 'power3.out' }, 2.02);
+
+      // held still from 2.52 to 3.5 — no jitter, no drift
+
+      window.__timelines['01-who-settles-it'] = tl;
+    })();
+  </script>
+</template>

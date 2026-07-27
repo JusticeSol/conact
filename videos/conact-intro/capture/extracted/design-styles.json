@@ -1,0 +1,198 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Playfair Display",
+      "fontSize": "19px",
+      "fontWeight": "700",
+      "lineHeight": "28.5px",
+      "letterSpacing": "-0.5px",
+      "color": "#1A1712",
+      "sampleText": "Open Jobs"
+    },
+    {
+      "role": "body",
+      "fontFamily": "DM Sans",
+      "fontSize": "13px",
+      "fontWeight": "400",
+      "lineHeight": "19.5px",
+      "letterSpacing": "normal",
+      "color": "#7A6A52",
+      "sampleText": "5 jobs on Arc testnet"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      2,
+      4,
+      5,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      14,
+      18,
+      20
+    ],
+    "baseUnit": 4
+  },
+  "radius": [
+    "6px",
+    "7px",
+    "8px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.1) 0px 4px 12px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Connect Wallet",
+      "background": "#1A1712",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "0px 14px",
+      "borderRadius": "8px",
+      "border": "0px none rgb(255, 255, 255)",
+      "boxShadow": "rgba(0, 0, 0, 0.1) 0px 4px 12px 0px",
+      "fontSize": "16px",
+      "fontWeight": "700",
+      "height": "40px"
+    },
+    {
+      "label": "◈Browse Jobs6",
+      "background": "#EDE8DC",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A1712",
+      "padding": "9px 11px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(26, 23, 18)",
+      "boxShadow": "none",
+      "fontSize": "13.5px",
+      "fontWeight": "400",
+      "height": "39px"
+    },
+    {
+      "label": "⬡Agents",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#7A6A52",
+      "padding": "9px 11px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(122, 106, 82)",
+      "boxShadow": "none",
+      "fontSize": "13.5px",
+      "fontWeight": "400",
+      "height": "39px"
+    },
+    {
+      "label": "+ Post a Job",
+      "background": "#EDE8DC",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A1712",
+      "padding": "10px",
+      "borderRadius": "8px",
+      "border": "1px solid rgb(200, 191, 168)",
+      "boxShadow": "none",
+      "fontSize": "13.5px",
+      "fontWeight": "500",
+      "height": "42.25px"
+    },
+    {
+      "label": "All",
+      "background": "#EDE8DC",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A1712",
+      "padding": "5px 10px",
+      "borderRadius": "6px",
+      "border": "1px solid rgb(168, 151, 122)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "height": "30px"
+    },
+    {
+      "label": "Writing",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#7A6A52",
+      "padding": "5px 10px",
+      "borderRadius": "6px",
+      "border": "1px solid rgb(200, 191, 168)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "height": "30px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A1712",
+      "padding": "18px 4px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "101.188px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "transparent",
+    "backgroundImage": "",
+    "backdropFilter": "",
+    "color": "#1A1712",
+    "padding": "0px 20px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "54px"
+  },
+  "chips": [
+    {
+      "label": "6",
+      "background": "#EDE8DC",
+      "color": "#1A1712",
+      "padding": "1px 6px",
+      "borderRadius": "10px",
+      "border": "0px solid rgb(26, 23, 18)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "18.5px"
+    },
+    {
+      "label": "5",
+      "background": "#F5EBD8",
+      "color": "#B07A2A",
+      "padding": "1px 6px",
+      "borderRadius": "10px",
+      "border": "0px solid rgb(176, 122, 42)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "18.5px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [],
+  "glass": []
+}

@@ -1,0 +1,132 @@
+<template>
+  <style>
+    @font-face {
+      font-family: 'Playfair Display';
+      src: url('assets/fonts/PlayfairDisplay-var.woff2') format('woff2');
+      font-weight: 400 700;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('assets/fonts/Inter-var.woff2') format('woff2');
+      font-weight: 400 700;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      src: url('assets/fonts/IBMPlexMono-400.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: block;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1080px;
+      overflow: hidden;
+    }
+
+    .f05-ground {
+      position: absolute;
+      inset: 0;
+      background: #F5F0E8;
+    }
+
+    .f05-stage {
+      position: absolute;
+      inset: 0;
+    }
+
+    .f05-rule {
+      position: absolute;
+      left: 140px;
+      top: 520px;
+      height: 1px;
+      width: 800px;
+      background: #C8BFA8;
+      transform-origin: 0% 50%;
+    }
+
+    .f05-mark {
+      position: absolute;
+      left: 140px;
+      top: 372px;
+      width: 800px;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 132px;
+      line-height: 1;
+      letter-spacing: -4px;
+      color: #1A1712;
+      text-align: center;
+    }
+
+    .f05-tagline {
+      position: absolute;
+      left: 140px;
+      top: 566px;
+      width: 800px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 30px;
+      line-height: 1.5;
+      letter-spacing: 0.3px;
+      color: #7A6A52;
+      text-align: center;
+    }
+
+    .f05-standards {
+      position: absolute;
+      left: 140px;
+      top: 636px;
+      width: 800px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 400;
+      font-size: 20px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #9A8A72;
+      text-align: center;
+    }
+  </style>
+
+  <div id="root" data-composition-id="05-conact" data-start="0" data-duration="2.5" data-width="1080" data-height="1080">
+    <div id="f05-ground" class="f05-ground clip" data-start="0" data-duration="2.5" data-track-index="0"></div>
+
+    <div id="f05-stage" class="f05-stage clip" data-start="0" data-duration="2.5" data-track-index="1">
+      <div class="f05-rule" id="f05-rule"></div>
+      <div class="f05-mark" id="f05-mark">CONACT</div>
+      <div class="f05-tagline" id="f05-tagline">Post jobs &middot; Hire AI agents &middot; Settle in USDC</div>
+      <div class="f05-standards" id="f05-standards">ERC-8004 &middot; ERC-8183 &middot; Arc Network</div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      gsap.set('#f05-rule', { scaleX: 0 });
+      gsap.set(['#f05-mark', '#f05-tagline', '#f05-standards'], { autoAlpha: 0 });
+
+      // Scene 1 (0.0-0.7) — the stage is bare; the brand's one structural device
+      // draws itself across the frame. Nothing else on screen.
+      tl.to('#f05-rule', { scaleX: 1, duration: 0.55, ease: 'power3.out' }, 0);
+
+      // Scene 2 (0.7-1.35) — the wordmark seats onto the rule that is already
+      // there to receive it. One clean settle, no scale pop.
+      tl.fromTo('#f05-mark', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.52, ease: 'power3.out' }, 0.7);
+
+      // Scene 3 (1.35-2.5) — tagline then standards line, then absolute stillness
+      // so the final rendered frame is a clean, legible end card.
+      tl.fromTo('#f05-tagline', { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 1.35);
+      tl.fromTo('#f05-standards', { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 1.47);
+
+      window.__timelines['05-conact'] = tl;
+    })();
+  </script>
+</template>
