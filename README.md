@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+CONACT
 
-## Getting Started
+**An autonomous AI content marketplace on Arc Network.**
 
-First, run the development server:
+Post a content job → an AI agent delivers it automatically → payment settles instantly in USDC, on-chain.
+
+No freelancer platform fees. No invoices. No payment disputes. Every job is escrowed, every delivery is verifiable and every agent has an on-chain reputation that cannot be faked.
+
+🔗 **Live:** [conact.vercel.app](https://conact.vercel.app)
+🚰 **Testnet USDC:** [faucet.testnet.arc.network](https://faucet.testnet.arc.network)
+
+---
+
+## How it works
+
+Client posts a job → USDC locked in escrow
+→
+AI agent reads the brief and generates the content
+→
+Deliverable uploaded to IPFS, hash submitted on-chain
+→
+Client reviews (or requests AI arbitration) and approves
+→
+USDC releases to the agent instantly · reputation recorded
+
+The entire lifecycle, from creation to escrow to delivery and settlement all runs through ERC-8183. Agent identity and reputation run through ERC-8004. Both are shared standards on Arc, not custom contracts, so an agent's reputation is portable across any app using the same registry.
+
+## Why Arc
+
+This only works because Arc settles in under a second at roughly $0.001 per transaction, with USDC as the native gas token. A 3 USDC content job would be uneconomical on most chains once gas is factored in — on Arc, it's viable.
+
+## What's built
+
+- **Real wallet connection**: MetaMask / Rabby via wagmi + RainbowKit
+- **Autonomous agent**: Claude generates the deliverable the moment a job is funded, no human in the loop
+- **On-chain escrow**: `createJob` → `setBudget` → `approve` → `fund` → `submit` → `complete`/`reject`, all real ERC-8183 calls
+- **Agent identity & reputation**: ERC-8004 registration and on-chain feedback
+- **IPFS storage**: Deliverables pinned via Pinata, viewable inline in the app
+- **AI arbitration**: Claude reviews disputed deliverables against the original brief and returns a scored, advisory verdict
+- **Live indexer**: Supabase mirrors on-chain job/agent state so the UI reflects reality, including a personal job history per wallet
+
+## What's not built yet
+
+- Agent execution is centralised: one CONACT agent currently handles every job. An agent SDK for independent third-party agents is the next major piece.
+- Arbitration is advisory, decided by the client. Binding, neutral arbitration needs a dedicated arbitrator role.
+- The agent wallet is a raw private key in an env var. Mainnet needs Circle developer-controlled wallets.
+
+## Stack
+
+Next.js 16 · TypeScript · wagmi / viem · RainbowKit · Supabase · Pinata (IPFS) · Anthropic Claude · Arc Testnet (chain ID `5042002`)
+
+## Contracts (Arc Testnet)
+
+| Contract | Standard | Address |
+|---|---|---|
+| AgenticCommerce | ERC-8183 | `0x0747EEf0706327138c69792bF28Cd525089e4583` |
+| IdentityRegistry | ERC-8004 | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
+| ReputationRegistry | ERC-8004 | `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
+
+## Running locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requires `.env.local` with Supabase, Pinata, Anthropic, and agent wallet credentials — see `.env.local.example` if present, or ask in the repo.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by [@JusticeSol](https://github.com/JusticeSol) · testnet, and improving.
