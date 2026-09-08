@@ -6,10 +6,9 @@ import {
   readVerdict,
   readChecklist,
 } from '../../../lib/genlayer'
+import { getOnChainDeliverableHash } from '../../../lib/arc-deliverable'
 
 export const maxDuration = 60
-
-const HASH_RE = /^0x[0-9a-fA-F]{64}$/
 
 function briefOf(job: any): string {
   return [
@@ -17,6 +16,47 @@ function briefOf(job: any): string {
     `CATEGORY: ${job?.category ?? ''}`,
     `DESCRIPTION: ${job?.description ?? ''}`,
   ].join('\n')
+}
+
+/**
+ * Resolve what is being judged from the job row, not from the caller.
+ *
+ * The client is not asked for the deliverable hash. It supplies a job id; the
+ * CID comes from the indexed job row, and the hash is read out of the submit
+ * transaction's own log on Arc. Anything the caller could set is therefore
+ * unable to change which artefact gets judged.
+ */
+async function resolveDeliverable(jobId: string) {
+  // Imported lazily: lib/supabase.ts builds its client at module scope from env
+  // vars, which fails page-data collection at build time when they are absent.
+  // agent-execute already loads it this way for the same reason.
+  const { supabase } = await import('../../../lib/supabase')
+
+  const { data } = await supabase
+    .from('jobs')
+    .select('chain_job_id, deliverable_uri, deliverable_hash, agent_tx_hash')
+    .eq('chain_job_id', jobId)
+    .maybeSingle()
+
+  const row = data ?? null
+  const cid = String(row?.deliverable_uri ?? '').replace('ipfs://', '').trim()
+
+  // Authoritative: comes from the chain, not the database.
+  const onChainHash = await getOnChainDeliverableHash(jobId, row?.agent_tx_hash)
+
+  // The stored hash is a convenience copy. If it disagrees with the chain, the
+  // chain wins and we say so — a silent disagreement is worth knowing about.
+  if (
+    onChainHash &&
+    row?.deliverable_hash &&
+    String(row.deliverable_hash).toLowerCase() !== onChainHash.toLowerCase()
+  ) {
+    console.warn(
+      `job ${jobId}: stored deliverable_hash ${row.deliverable_hash} != on-chain ${onChainHash}`,
+    )
+  }
+
+  return { cid, onChainHash }
 }
 
 /**
@@ -38,7 +78,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { action, job, deliverableCid, deliverableHash } = await req.json()
+    const { action, job } = await req.json()
     const jobId = String(job?.chain_job_id ?? job?.id ?? '')
     if (!jobId) {
       return NextResponse.json({ success: false, error: 'missing job id' }, { status: 400 })
@@ -50,34 +90,31 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'adjudicate') {
-      const cid = String(deliverableCid || '').replace('ipfs://', '').trim()
+      const { cid, onChainHash } = await resolveDeliverable(jobId)
+
       if (!cid) {
         return NextResponse.json(
-          { success: false, error: 'missing deliverable CID' },
-          { status: 400 },
+          { success: false, error: 'no deliverable recorded for this job' },
+          { status: 409 },
         )
       }
 
-      // The hash MUST be the one committed on Arc by submit(). We deliberately do
-      // not derive it from the CID here: deriving it would make the contract's
-      // check compare our own arithmetic against itself and prove nothing about
-      // which artefact Arc actually committed to.
-      //
-      // See genlayer/README.md — reading this back from Arc needs a view function
-      // that is not in the ABI the app currently ships.
-      if (!HASH_RE.test(String(deliverableHash || ''))) {
+      // Refuse rather than derive the hash from the CID: deriving it would make
+      // the contract's check compare our own arithmetic against itself and prove
+      // nothing about what Arc actually committed to.
+      if (!onChainHash) {
         return NextResponse.json(
           {
             success: false,
             error:
-              'no on-chain deliverable hash available for this job, refusing to arbitrate',
+              'could not read the committed deliverable hash from Arc, refusing to arbitrate',
           },
           { status: 409 },
         )
       }
 
-      const txId = await submitAdjudicate(jobId, briefOf(job), cid, String(deliverableHash))
-      return NextResponse.json({ success: true, phase: 'judging', txId })
+      const txId = await submitAdjudicate(jobId, briefOf(job), cid, onChainHash)
+      return NextResponse.json({ success: true, phase: 'judging', txId, cid })
     }
 
     return NextResponse.json({ success: false, error: 'unknown action' }, { status: 400 })

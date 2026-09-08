@@ -32,11 +32,11 @@ export async function submitPrepare(jobId: string, brief: string) {
     address: ARBITRATION_ADDRESS as `0x${string}`,
     functionName: 'prepare',
     args: [jobId, brief],
-    value: 0n,
-    // Not in the published typings; accepted at runtime. The CLI has no equivalent
-    // flag, which is why browser-submitted transactions land more often than CLI ones.
+    value: BigInt(0),
+    // A real, typed option. The CLI has no equivalent flag, which is why
+    // browser-submitted transactions land more often than CLI ones.
     consensusMaxRotations: CONSENSUS_MAX_ROTATIONS,
-  } as any)
+  })
 }
 
 /** Fetch the deliverable and answer the checklist. One web fetch, one prompt. */
@@ -51,9 +51,9 @@ export async function submitAdjudicate(
     address: ARBITRATION_ADDRESS as `0x${string}`,
     functionName: 'adjudicate',
     args: [jobId, brief, cid, expectedHash, IPFS_GATEWAY],
-    value: 0n,
+    value: BigInt(0),
     consensusMaxRotations: CONSENSUS_MAX_ROTATIONS,
-  } as any)
+  })
 }
 
 /**
@@ -71,7 +71,6 @@ export async function readVerdict(jobId: string): Promise<any | null> {
     address: ARBITRATION_ADDRESS as `0x${string}`,
     functionName: 'get_verdict',
     args: [jobId],
-    stateStatus: 'finalized',
   })) as string
   if (!raw) return null
   try {
@@ -87,7 +86,6 @@ export async function readChecklist(jobId: string): Promise<any | null> {
     address: ARBITRATION_ADDRESS as `0x${string}`,
     functionName: 'get_checklist',
     args: [jobId],
-    stateStatus: 'finalized',
   })) as string
   if (!raw) return null
   try {

@@ -150,23 +150,54 @@ zero, and nothing written to storage. Status tells you the transaction stopped m
 not that it succeeded.
 
 `lib/genlayer.ts` therefore never reads a status word. It reads contract state, and
-the UI only shows a verdict that came back from `get_verdict`. Anything that later
-releases USDC on Arc must do the same, and must wait for `finalized` rather than
-`accepted` — accepted state has been observed rolling back, and there is no way to
-claw USDC back from an agent once released.
+the UI only shows a verdict that came back from `get_verdict`.
 
-## Known gap, needs a follow-up
+One honest limitation: `genlayer-js` 1.1.8 has **no `stateStatus` option** on
+`readContract`. The SDK README documents one, but it is absent from the installed
+typings, so the code no longer passes it and reads use the client default rather than
+an explicitly finalized view.
 
-The relayer requires the deliverable hash that Arc committed in `submit()`. Today the
-app only has that in `deliverableMap`, which is in-memory React state populated when
-you submit in that session and lost on refresh — nothing reads it back from Arc,
-because the ABI in `Marketplace.tsx` has no view function or event exposing it.
+That is acceptable while this PR moves no money. It stops being acceptable the moment
+something releases escrow on Arc off the back of a verdict: accepted state has been
+observed rolling back, there is no way to claw USDC back from an agent once released,
+and so settlement must confirm finality explicitly — `waitForTransactionReceipt` with
+`TransactionStatus.FINALIZED`, or `genlayer receipt <txId> --status FINALIZED` — and
+then re-read contract state before paying anyone.
 
-Rather than derive the hash from the CID (which would make the contract's check
-compare our own arithmetic against itself and prove nothing), the route **refuses to
-arbitrate** with a 409 when it has no chain-sourced hash. Closing this properly means
-adding the ERC-8183 read for a job's deliverable hash. Flagged rather than papered
-over.
+## Where the deliverable hash comes from
+
+The browser is never asked for it. The client sends a job id; everything else is
+resolved server-side, and the hash comes off Arc.
+
+Getting there took two dead ends worth recording:
+
+- **`getJob()` does not have it.** The ERC-8183 `Job` struct is
+  `id / client / provider / evaluator / description / budget / expiredAt / status / hook`.
+  No deliverable field. (The contract at `0x0747EE…` is an ERC1967 proxy; the real ABI
+  lives at implementation `0xa316fd02827242d537f84730f8a37d0ba5fd351a`.)
+- **Searching the logs does not scale.** The hash *is* emitted, in
+  `JobSubmitted(uint256 indexed jobId, address indexed provider, bytes32 deliverable)`.
+  But the Arc RPC answers `pruned history unavailable` from block 0 and
+  `requested range too large` beyond ~10k blocks, while the chain is past 61M blocks
+  and `jobCounter` is past 185k. An old job cannot be found by scanning.
+
+So `lib/arc-deliverable.ts` uses the `agent_tx_hash` that `agent-execute` **already
+persists** on submit as a *pointer*, fetches that transaction's receipt, and reads the
+hash out of its `JobSubmitted` log — a targeted lookup with no range scan. It checks
+both the emitting contract and the indexed `jobId`, so a pointer aimed at a different
+transaction fails instead of substituting a different artefact.
+
+A pointer is safe in a way a stored hash is not: the database only gets to say *which
+transaction to look at*, and the value itself comes from chain data. The stored
+`deliverable_hash` is treated as a convenience copy and logged if it disagrees.
+
+Verified against live job `185616`: receipt lookup and log scan both return
+`0x3d04f40cda87e9e0ef96d0808de55341fb244a178c81653903d8f55fd247c049`, and a pointer
+carrying the wrong `jobId` is rejected.
+
+If the hash cannot be established from the chain, the route still returns **409 and
+refuses to arbitrate**, rather than deriving it from the CID — which would make the
+contract's check compare our own arithmetic against itself and prove nothing.
 
 ## Versions
 

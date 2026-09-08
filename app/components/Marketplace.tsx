@@ -643,7 +643,7 @@ function RejectJobModal({ job, onClose, onRejected }) {
 
 const GENLAYER_ON = process.env.NEXT_PUBLIC_GENLAYER_ARBITRATION === 'true'
 
-async function runGenlayerArbitration(job: any, deliv: any, onPhase: (p: string) => void) {
+async function runGenlayerArbitration(job: any, onPhase: (p: string) => void) {
   const jobId = String(job.chain_job_id ?? job.id)
   const poll = async () => {
     const r = await fetch(`/api/arbitrate-genlayer?jobId=${encodeURIComponent(jobId)}`)
@@ -678,12 +678,10 @@ async function runGenlayerArbitration(job: any, deliv: any, onPhase: (p: string)
   if (prepared.phase === 'timeout') return { verdict: 'ERROR', error: 'checklist timed out' }
 
   onPhase('judging')
-  const adj = await post({
-    action: 'adjudicate',
-    job,
-    deliverableCid: deliv?.value,
-    deliverableHash: deliv?.delivHash,
-  })
+  // Deliberately sends only the job id. The CID comes from the indexed job row
+  // and the deliverable hash is read out of the submit transaction's log on Arc,
+  // so nothing the browser can set decides which artefact gets judged.
+  const adj = await post({ action: 'adjudicate', job })
   if (!adj.success) return { ...adj, verdict: 'ERROR' }
 
   const decided = await waitFor((s: any) => s.phase === 'decided')
@@ -709,7 +707,7 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
 
     try {
       if (GENLAYER_ON) {
-        const data = await runGenlayerArbitration(sel, delivRef(sel), setArbitrationPhase)
+        const data = await runGenlayerArbitration(sel, setArbitrationPhase)
         setArbitrationResult(data)
       } else {
         const res = await fetch('/api/agent-execute', {
