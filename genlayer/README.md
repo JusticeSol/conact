@@ -101,11 +101,42 @@ GENLAYER_ARBITRATION_ADDRESS=0x…
 GENLAYER_PRIVATE_KEY=0x…
 ```
 
+## Verified live
+
+Two runs against the deployed contract, same deliverable both times: the IPFS welcome
+readme at `QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB`.
+
+**Should pass** — brief asked for a short welcome doc that greets the reader, confirms
+install, warns the software is alpha, and lists other files.
+
+```json
+{"status":"decided","verdict":"APPROVE","checks_passed":6,"checks_total":6,"failed":[]}
+```
+
+**Should fail** — same document, judged against a brief asking for a Solana staking
+guide with Rust code and a stated APY.
+
+```json
+{"status":"decided","verdict":"REJECT","checks_passed":1,"checks_total":8,
+ "met":["Is the entire document written in the English language?"]}
+```
+
+The negative control is the one that matters. It did not blanket-fail: it correctly
+answered that the document *is* in English while failing all seven Solana-specific
+requirements. The validators reached agreement on both runs, so the checklist design
+converges in practice rather than only in theory.
+
 ## Timing
 
 Budget 30–90 seconds per phase, occasionally minutes, so roughly one to three minutes
 end to end. The UI polls every 15 seconds and shows which phase it is in. Do not poll
 faster — the node rate-limits and returns `-32005 node is at capacity`.
+
+Measured over this session on Bradbury: deploys landed first attempt both times;
+`prepare` took 2, 1 and 1 attempts; `adjudicate` took 1 and 2. `LEADER_TIMEOUT` came up
+repeatedly and never once meant the work had actually failed to be retryable — but it
+also produced a "Write operation successfully executed" line from the CLI while writing
+nothing at all, which is the reason every step here re-reads state before believing it.
 
 `LEADER_TIMEOUT` is common on testnet and is **not** proof of failure; writes commonly
 need one to six attempts, which is why `GENLAYER_MAX_ROTATIONS` defaults to 8 here
