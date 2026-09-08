@@ -58,6 +58,16 @@ a rendered page depends on script timing and lets two honest validators disagree
 the page rather than about the content. It does **not follow redirects**, so the
 gateway must return 200 directly.
 
+## Deployed
+
+Testnet Bradbury (chain `4221`, rpc `https://rpc-bradbury.genlayer.com`):
+
+```
+0xdD5D7E08e5C1B6359dfe1bE08a84Ad29c37882C9
+```
+
+Explorer: https://explorer-bradbury.genlayer.com/
+
 ## Deploy
 
 ```bash
@@ -66,6 +76,18 @@ genlayer network set testnet-bradbury
 genlayer account create                 # fund it from the GenLayer faucet
 genlayer deploy --contract genlayer/arbitration.py
 ```
+
+### Passing a bytes32 argument
+
+The CLI parses a `0x`-prefixed 64-character hex string as a **BigInt** before it
+ever reaches the contract — its own `--args` help says `int: 42, -1, 0x1a`. So a
+deliverable hash arrives as a decimal integer, while `genlayer-js` passes the same
+value through as a string.
+
+This bit us on the first live run: the contract refused every request with
+`deliverable hash mismatch`, comparing `0xe167ab38…` against
+`0x101953557887…` — the same number in two encodings. `_norm_hash` now accepts
+either and normalises, rather than being correct only for one caller.
 
 If the deploy prints a transaction hash but no address, it usually deployed anyway —
 `gen_getTransactionReceipt` returns a `recipient` field which is the new contract

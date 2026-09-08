@@ -42,7 +42,6 @@ Design notes, and why it is shaped this way:
 """
 
 from genlayer import *
-from genlayer.py.keccak import Keccak256
 
 import json
 
@@ -68,11 +67,20 @@ class ConactArbitration(gl.Contract):
     def _keccak_hex(self, text: str) -> str:
         return "0x" + Keccak256(text.encode("utf-8")).digest().hex()
 
-    def _norm_hash(self, value: str) -> str:
+    def _norm_hash(self, value) -> str:
+        # Callers do not agree on how to encode a bytes32. The CLI parses a
+        # 0x-prefixed 64-char hex string into a BigInt before it ever reaches the
+        # contract, while genlayer-js passes the string through unchanged. Accept
+        # either and normalise, rather than silently comparing a hex string to a
+        # decimal one and refusing every honest request.
+        if isinstance(value, bool):
+            return "0x" + "0" * 64
+        if isinstance(value, int):
+            return "0x" + format(value, "064x")
         v = str(value).strip().lower()
-        if not v.startswith("0x"):
-            v = "0x" + v
-        return v
+        if v.startswith("0x"):
+            v = v[2:]
+        return "0x" + v.rjust(64, "0")
 
     # ── step 1: compile the brief into closed yes/no requirements ─────────────
 
