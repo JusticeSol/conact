@@ -633,6 +633,64 @@ function RejectJobModal({ job, onClose, onRejected }) {
   );
 }
 
+// ─── GENLAYER ARBITRATION ────────────────────────────────────────────────────
+// Binding arbitration: many independent validators judge the deliverable and the
+// verdict is recorded on chain. Off by default — set NEXT_PUBLIC_GENLAYER_ARBITRATION=true.
+//
+// Two phases because validators re-execute the non-deterministic work themselves,
+// so one round that both compiles a checklist and fetches the deliverable does not
+// reliably reach a terminal state. Expect 30–90s per phase, occasionally minutes.
+
+const GENLAYER_ON = process.env.NEXT_PUBLIC_GENLAYER_ARBITRATION === 'true'
+
+async function runGenlayerArbitration(job: any, deliv: any, onPhase: (p: string) => void) {
+  const jobId = String(job.chain_job_id ?? job.id)
+  const poll = async () => {
+    const r = await fetch(`/api/arbitrate-genlayer?jobId=${encodeURIComponent(jobId)}`)
+    return await r.json()
+  }
+  const post = async (body: any) => {
+    const r = await fetch('/api/arbitrate-genlayer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    return await r.json()
+  }
+  // Poll every 15s. Faster gains nothing and the node rate-limits.
+  const waitFor = async (test: (s: any) => boolean, timeoutMs = 8 * 60 * 1000) => {
+    const started = Date.now()
+    while (Date.now() - started < timeoutMs) {
+      await new Promise(res => setTimeout(res, 15000))
+      const state = await poll()
+      if (state.phase === 'refused') return state
+      if (test(state)) return state
+    }
+    return { phase: 'timeout' }
+  }
+
+  onPhase('preparing')
+  const prep = await post({ action: 'prepare', job })
+  if (!prep.success) return { ...prep, verdict: 'ERROR' }
+
+  const prepared = await waitFor((s: any) => s.phase === 'prepared' || s.phase === 'decided')
+  if (prepared.phase === 'refused') return { ...prepared, verdict: 'ERROR' }
+  if (prepared.phase === 'timeout') return { verdict: 'ERROR', error: 'checklist timed out' }
+
+  onPhase('judging')
+  const adj = await post({
+    action: 'adjudicate',
+    job,
+    deliverableCid: deliv?.value,
+    deliverableHash: deliv?.delivHash,
+  })
+  if (!adj.success) return { ...adj, verdict: 'ERROR' }
+
+  const decided = await waitFor((s: any) => s.phase === 'decided')
+  if (decided.phase === 'timeout') return { verdict: 'ERROR', error: 'verdict timed out' }
+  return decided
+}
+
 // ─── EVALUATION DASHBOARD ────────────────────────────────────────────────────
 
 function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJobs, onComplete, onReject, isMobile }) {
@@ -640,29 +698,37 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
   const [jobContent, setJobContent] = useState<any>(null)
   const [loadingContent, setLoadingContent] = useState(false)
   const [arbitrating, setArbitrating] = useState(false)
+  const [arbitrationPhase, setArbitrationPhase] = useState<string|null>(null)
   const [arbitrationResult, setArbitrationResult] = useState<any>(null)
 
   const handleArbitration = async () => {
     if (!sel) return
     setArbitrating(true)
+    setArbitrationPhase(null)
     setArbitrationResult(null)
 
     try {
-      const res = await fetch('/api/agent-execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'arbitrate',
-          job: sel,
-          deliverableContent: jobContent?.content || null,
-        }),
-      })
-      const data = await res.json()
-      setArbitrationResult(data)
+      if (GENLAYER_ON) {
+        const data = await runGenlayerArbitration(sel, delivRef(sel), setArbitrationPhase)
+        setArbitrationResult(data)
+      } else {
+        const res = await fetch('/api/agent-execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'arbitrate',
+            job: sel,
+            deliverableContent: jobContent?.content || null,
+          }),
+        })
+        const data = await res.json()
+        setArbitrationResult(data)
+      }
     } catch (err) {
       console.error('Arbitration error:', err)
     } finally {
       setArbitrating(false)
+      setArbitrationPhase(null)
     }
   }
 
@@ -841,7 +907,9 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                         </span>
                       </div>
                       <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12,color:arbitrationResult.verdict==='APPROVE'?'#5A8A5A':'#A85440'}}>
-                        {arbitrationResult.score}/100
+                        {arbitrationResult.checksTotal
+                          ? `${arbitrationResult.checksPassed}/${arbitrationResult.checksTotal} requirements`
+                          : `${arbitrationResult.score}/100`}
                       </span>
                     </div>
                     <p style={{fontSize:13,color:'#4A4133',lineHeight:1.7,marginBottom:10}}>
@@ -864,7 +932,9 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                       </div>
                     )}
                     <div style={{fontSize:11.5,color:'#7A6A52',borderTop:`1px solid ${arbitrationResult.verdict==='APPROVE'?'#B8CDB4':'#D8B8AC'}`,paddingTop:10,marginTop:4}}>
-                      AI arbitration verdict is advisory — you can still override below.
+                      {GENLAYER_ON
+                        ? 'Verdict decided by independent validators and recorded on GenLayer.'
+                        : 'AI arbitration verdict is advisory — you can still override below.'}
                     </div>
                   </div>
                 )}
@@ -876,7 +946,11 @@ function EvaluationDashboard({ queue, deliverableMap, completedJobs, rejectedJob
                     onClick={handleArbitration}
                     disabled={arbitrating}
                     style={{padding:"11px 16px",borderRadius:9,background:"#EAE6F0",color:"#7A6A9A",border:"1px solid #B8AECC",fontSize:13,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:arbitrating?"not-allowed":"pointer",opacity:arbitrating?0.6:1,transition:"all .2s"}}>
-                    {arbitrating ? '⟳ Arbitrating…' : '⚖ AI Arbitration'}
+                    {arbitrating
+                      ? (arbitrationPhase==='preparing' ? '⟳ Compiling checklist…'
+                        : arbitrationPhase==='judging'  ? '⟳ Validators judging…'
+                        : '⟳ Arbitrating…')
+                      : (GENLAYER_ON ? '⚖ On-chain Arbitration' : '⚖ AI Arbitration')}
                   </button>
                   <button className="btn-complete" onClick={()=>onComplete(sel)} style={{flex:1,padding:"12px",borderRadius:9,background:"#E6EEE3",color:"#5A8A5A",border:"1px solid #B8CDB4",fontSize:13.5,fontFamily:"'Playfair Display',serif",fontWeight:600,cursor:"pointer"}}>
                     Approve &amp; Release {sel.budget} USDC →
